@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, ViewChild, ElementRef, AfterViewChecked, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, AfterViewChecked, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
+import { ModerationService } from '../../../../core/services/moderation.service';
 
 @Component({
   selector: 'app-chat',
@@ -11,7 +12,7 @@ import { ChatService } from '../../services/chat.service';
   template: `
     <div class="flex flex-col h-screen bg-slate-50">
       <!-- Header -->
-      <div class="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 shadow-sm z-10">
+      <div class="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 shadow-sm z-10 relative">
         <button (click)="goBack()" class="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-full">
           ⬅
         </button>
@@ -31,9 +32,24 @@ import { ChatService } from '../../services/chat.service';
            </span>
         </div>
 
-        <button class="p-2 text-slate-400 hover:bg-slate-100 rounded-full">
+        <button (click)="toggleMenu()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-full">
            ⋮
         </button>
+
+        <!-- Menu -->
+        <div 
+          *ngIf="isMenuOpen()" 
+          class="absolute right-4 top-14 w-48 bg-white rounded-lg shadow-xl border border-slate-100 py-1 z-20 animate-in fade-in zoom-in-95 duration-200">
+             <button 
+               (click)="blockUser()"
+               class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+               <span>🚫</span> Bloquer l'utilisateur
+             </button>
+             <button class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">
+               <span>⚠️</span> Signaler
+             </button>
+          </div>
+          <div *ngIf="isMenuOpen()" (click)="toggleMenu()" class="fixed inset-0 z-0"></div>
       </div>
 
       <!-- Messages Area -->
@@ -90,11 +106,13 @@ import { ChatService } from '../../services/chat.service';
 })
 export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   chatService = inject(ChatService);
+  private moderationService = inject(ModerationService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   activeChat = this.chatService.activeChat;
   newMessage = '';
+  isMenuOpen = signal(false);
   
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
@@ -123,6 +141,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   goBack() {
     this.router.navigate(['/messages']);
+  }
+
+  toggleMenu() {
+    this.isMenuOpen.update(v => !v);
+  }
+
+  blockUser() {
+    const chat = this.activeChat();
+    if (chat) {
+       this.moderationService.blockUser(chat.userId);
+       this.router.navigate(['/messages']);
+       // Ideally show a toast here
+    }
   }
 
   send() {
