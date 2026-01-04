@@ -18,14 +18,14 @@ import { ProfileService } from '../../../profile/services/profile.service';
           <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
           
           <div class="relative z-10 max-w-2xl mx-auto">
-             <div class="inline-block px-3 py-1 mb-4 rounded-full bg-gradient-to-r from-amber to-orange-500 text-white text-xs font-bold tracking-widest uppercase animate-pulse">
-                Premium
+             <div class="inline-block px-3 py-1 mb-4 rounded-full bg-red-100 text-red-600 text-xs font-bold tracking-widest uppercase">
+                Maintenance
              </div>
              <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-4">
                 Passez au niveau supérieur
              </h1>
              <p class="text-slate-400 text-lg">
-                Débloquez tout le potentiel de Sama Link et faites des rencontres exceptionnelles.
+                Les paiements sont temporairement désactivés pour maintenance.
              </p>
           </div>
        </div>
@@ -33,7 +33,7 @@ import { ProfileService } from '../../../profile/services/profile.service';
        <div class="max-w-md mx-auto -mt-8 px-4 relative z-20 space-y-6">
           
           <!-- Plans Loop -->
-          <div *ngFor="let plan of paymentService.plans" class="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105">
+          <div *ngFor="let plan of paymentService.plans" class="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all opacity-75 grayscale">
              <div class="p-6">
                 <div class="flex justify-between items-start mb-4">
                    <div>
@@ -51,9 +51,9 @@ import { ProfileService } from '../../../profile/services/profile.service';
                 <sl-button 
                    [variant]="plan.id === 'yearly' ? 'primary' : 'secondary'"
                    [block]="true"
-                   (click)="openPayment(plan)"
+                   [disabled]="true"
                    class="mb-6">
-                   Choisir {{ plan.name }}
+                   Bientôt disponible
                 </sl-button>
 
                 <ul class="space-y-3">
