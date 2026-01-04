@@ -11,7 +11,10 @@ export const routes: Routes = [
   {
     path: 'feed',
     loadChildren: () => import('./features/feed/feed.routes').then(m => m.FEED_ROUTES)
-    // In real app, apply AuthGuard here
+  },
+  {
+    path: 'matching',
+    loadChildren: () => import('./features/matching/matching.routes').then(m => m.MATCHING_ROUTES)
   },
   { path: '', redirectTo: 'feed', pathMatch: 'full' }
 ];

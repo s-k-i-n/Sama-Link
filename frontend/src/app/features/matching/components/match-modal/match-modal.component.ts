@@ -1,13 +1,12 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { User } from '../../../../core/models/user.model';
-import { SlModalComponent } from '../../../../shared/ui/sl-modal/sl-modal';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 
 @Component({
   selector: 'app-match-modal',
   standalone: true,
-  imports: [CommonModule, SlModalComponent, SlButtonComponent],
+  imports: [CommonModule, SlButtonComponent],
   template: `
     <div *ngIf="isOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-night/90 backdrop-blur-sm animate-in fade-in duration-300">
        <div class="w-full max-w-md bg-transparent text-center p-6 relative">

@@ -1,13 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { User } from '../../../../core/models/user.model';
-import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
-import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 
 @Component({
   selector: 'app-swipe-card',
   standalone: true,
-  imports: [CommonModule, SlCardComponent, SlButtonComponent],
+  imports: [CommonModule],
   template: `
     <div class="relative w-full max-w-sm mx-auto h-[600px] rounded-2xl overflow-hidden shadow-xl bg-white border border-slate-100 flex flex-col">
       <!-- Photo Area (Mocked with color gradient for now) -->
@@ -52,13 +50,13 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
     <!-- Controls (External to card usually but here for simple UI) -->
     <div class="flex justify-center gap-6 mt-8">
       <button 
-        (click)="pass.emit(user.id)"
+        (click)="pass.emit(user)"
         class="w-16 h-16 rounded-full bg-white shadow-lg border border-slate-100 text-slate-400 flex items-center justify-center text-2xl hover:bg-slate-50 hover:text-red-500 transition-all hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-200">
         ✖
       </button>
 
       <button 
-        (click)="like.emit(user.id)"
+        (click)="like.emit(user)"
         class="w-16 h-16 rounded-full bg-sage shadow-lg shadow-sage/30 text-white flex items-center justify-center text-3xl hover:bg-emerald-600 transition-all hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sage/50">
         ❤️
       </button>
@@ -67,6 +65,6 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 })
 export class SwipeCardComponent {
   @Input({ required: true }) user!: User;
-  @Output() like = new EventEmitter<string>();
-  @Output() pass = new EventEmitter<string>();
+  @Output() like = new EventEmitter<User>();
+  @Output() pass = new EventEmitter<User>();
 }
