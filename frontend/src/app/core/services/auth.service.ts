@@ -25,16 +25,26 @@ export class AuthService {
     }
   }
 
+  // Mock state for onboarding
+  hasCompletedOnboarding = signal<boolean>(false);
+
   login(token: string, user: any) {
     this.storage.setItem('access_token', token);
     this.currentUser.set(user);
     this.isAuthenticated.set(true);
+    // For demo, assume fresh login means onboarding needed unless specified
+    this.hasCompletedOnboarding.set(false);
+  }
+
+  completeOnboarding() {
+      this.hasCompletedOnboarding.set(true);
   }
 
   logout() {
     this.storage.removeItem('access_token');
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
+    this.hasCompletedOnboarding.set(false);
     this.router.navigate(['/auth/login']);
   }
 }
