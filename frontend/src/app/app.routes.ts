@@ -24,5 +24,9 @@ export const routes: Routes = [
     path: 'profile',
     loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES)
   },
+  {
+    path: 'premium',
+    loadChildren: () => import('./features/premium/premium.routes').then(m => m.PREMIUM_ROUTES)
+  },
   { path: '', redirectTo: 'feed', pathMatch: 'full' }
 ];

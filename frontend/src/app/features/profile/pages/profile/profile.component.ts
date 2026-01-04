@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ProfileService } from '../../services/profile.service';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 import { SlInputComponent } from '../../../../shared/ui/sl-input/sl-input';
@@ -73,7 +74,7 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
            <div *ngIf="!user().isPremium" class="bg-gradient-to-r from-amber to-orange-400 p-6 rounded-2xl text-white shadow-lg text-center">
               <h3 class="font-bold text-xl mb-2">Passez Premium ! 🚀</h3>
               <p class="text-white/90 mb-4 text-sm">Débloquez les messages illimités et voyez qui vous like.</p>
-              <sl-button variant="secondary" [block]="true" class="bg-white text-amber hover:bg-slate-50 border-none">
+              <sl-button variant="secondary" [block]="true" class="bg-white text-amber hover:bg-slate-50 border-none" (click)="goToPremium()">
                  Voir les offres
               </sl-button>
            </div>
@@ -107,6 +108,7 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
 export class ProfileComponent {
   profileService = inject(ProfileService);
   fb = inject(FormBuilder);
+  private router = inject(Router);
   
   user = this.profileService.currentUser;
   isEditing = signal(false);
@@ -150,5 +152,9 @@ export class ProfileComponent {
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  goToPremium() {
+    this.router.navigate(['/premium']);
   }
 }
