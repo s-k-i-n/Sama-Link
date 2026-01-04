@@ -7,6 +7,9 @@ export interface User {
   bio: string;
   profilePhotoUrl?: string; // Optional, maybe default avatar
   interests: string[];
+  isPremium?: boolean;
+  occupation?: string;
+  education?: string;
   compatibilityScore?: number; // Match percentage
   distance?: number; // km
 }
