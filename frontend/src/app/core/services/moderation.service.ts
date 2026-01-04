@@ -1,6 +1,4 @@
 import { Injectable, signal } from '@angular/core';
-import { SlToastComponent } from '../../../shared/ui/sl-toast/sl-toast';
-
 @Injectable({
   providedIn: 'root'
 })
