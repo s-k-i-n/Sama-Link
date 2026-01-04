@@ -16,5 +16,9 @@ export const routes: Routes = [
     path: 'matching',
     loadChildren: () => import('./features/matching/matching.routes').then(m => m.MATCHING_ROUTES)
   },
+  {
+    path: 'messages',
+    loadChildren: () => import('./features/messaging/messaging.routes').then(m => m.MESSAGING_ROUTES)
+  },
   { path: '', redirectTo: 'feed', pathMatch: 'full' }
 ];
