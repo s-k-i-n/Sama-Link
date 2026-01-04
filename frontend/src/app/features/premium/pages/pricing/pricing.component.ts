@@ -3,14 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { PaymentService } from '../../services/payment.service';
 import { PaymentModalComponent } from '../../components/payment-modal/payment-modal.component';
-import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 import { ProfileService } from '../../../profile/services/profile.service';
 
 @Component({
   selector: 'app-pricing',
   standalone: true,
-  imports: [CommonModule, PaymentModalComponent, SlCardComponent, SlButtonComponent],
+  imports: [CommonModule, PaymentModalComponent, SlButtonComponent],
   template: `
     <div class="min-h-screen bg-slate-50 pb-20">
        <div class="relative bg-night py-16 px-4 text-center overflow-hidden">
