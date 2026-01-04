@@ -8,5 +8,10 @@ export const routes: Routes = [
     path: 'onboarding',
     loadChildren: () => import('./features/onboarding/onboarding.routes').then(m => m.ONBOARDING_ROUTES)
   },
-  { path: '', redirectTo: 'auth', pathMatch: 'full' }
+  {
+    path: 'feed',
+    loadChildren: () => import('./features/feed/feed.routes').then(m => m.FEED_ROUTES)
+    // In real app, apply AuthGuard here
+  },
+  { path: '', redirectTo: 'feed', pathMatch: 'full' }
 ];
