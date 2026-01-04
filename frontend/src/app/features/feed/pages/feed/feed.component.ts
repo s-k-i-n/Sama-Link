@@ -2,13 +2,12 @@ import { Component, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FeedService } from '../../services/feed.service';
 import { ConfessionCardComponent } from '../../components/confession-card/confession-card.component';
-import { CreateConfessionModalComponent } from '../../components/create-confession-modal/create-confession-modal.component';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 
 @Component({
   selector: 'app-feed',
   standalone: true,
-  imports: [CommonModule, ConfessionCardComponent, CreateConfessionModalComponent, SlButtonComponent],
+  imports: [CommonModule, ConfessionCardComponent, CreateConfessionModalComponent],
   template: `
     <div class="min-h-screen bg-ivory pb-20">
       <!-- Top Bar -->
