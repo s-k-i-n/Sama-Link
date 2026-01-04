@@ -8,7 +8,7 @@ import { SlButtonComponent } from '../sl-button/sl-button';
   imports: [CommonModule, SlButtonComponent],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
-         *ngIf="isOpen()"
+         *ngIf="isOpen"
          role="dialog"
          aria-modal="true"
          [attr.aria-labelledby]="title">
@@ -46,11 +46,10 @@ import { SlButtonComponent } from '../sl-button/sl-button';
 })
 export class SlModalComponent {
   @Input() title = '';
-  @Input() isOpen = signal(false);
+  @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
 
   close() {
-    this.isOpen.set(false);
     this.closed.emit();
   }
 }

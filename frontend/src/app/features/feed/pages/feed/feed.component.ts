@@ -4,6 +4,8 @@ import { FeedService } from '../../services/feed.service';
 import { ConfessionCardComponent } from '../../components/confession-card/confession-card.component';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 
+import { CreateConfessionModalComponent } from '../../components/create-confession-modal/create-confession-modal.component';
+
 @Component({
   selector: 'app-feed',
   standalone: true,

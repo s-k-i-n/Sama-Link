@@ -11,7 +11,7 @@ import { FeedService } from '../../services/feed.service';
   imports: [CommonModule, ReactiveFormsModule, SlModalComponent, SlButtonComponent],
   template: `
     <sl-modal 
-      [isOpen]="isOpen" 
+      [isOpen]="isOpen()" 
       title="Nouvelle Confession" 
       (closed)="close()">
       
