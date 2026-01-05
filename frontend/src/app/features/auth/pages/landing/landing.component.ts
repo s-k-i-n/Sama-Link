@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
+import { Meta, Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-landing',
@@ -38,7 +39,7 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
           La plateforme anonyme pour partager vos pensées et rencontrer des personnes qui vous comprennent vraiment.
         </p>
         
-        <div class="flex flex-col sm:flex-row gap-4 w-full max-w-xs sm:max-w-md animate-reveal [animation-delay:600ms]">
+        <div class="flex flex-col sm:flex-row gap-4 w-full max-w-xs sm:max-w-md justify-center animate-reveal [animation-delay:600ms]">
           <sl-button variant="primary" size="lg" [block]="true" routerLink="/auth/register" class="shadow-xl shadow-sage/20 hover:shadow-2xl hover:shadow-sage/30 transition-all">
             Commencer maintenant
           </sl-button>
@@ -91,4 +92,13 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
   `,
   styles: []
 })
-export class LandingComponent { }
+export class LandingComponent implements OnInit {
+  private title = inject(Title);
+  private meta = inject(Meta);
+
+  ngOnInit() {
+    this.title.setTitle('Sama Link - Confessions, Amour et Rencontres au Sénégal');
+    this.meta.updateTag({ name: 'description', content: 'Rejoignez Sama Link, la première plateforme de confessions anonymes au Sénégal. Partagez vos pensées et trouvez l\'amour en toute sincérité.' });
+    this.meta.updateTag({ property: 'og:title', content: 'Sama Link - Confessions Anonymes' });
+  }
+}
