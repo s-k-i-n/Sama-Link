@@ -12,7 +12,13 @@ import { AuthService } from '../../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, SlButtonComponent, SlInputComponent, SlCardComponent],
   template: `
-    <div class="min-h-screen bg-ivory flex items-center justify-center p-4">
+    <div class="min-h-screen bg-ivory flex items-center justify-center p-4 relative">
+      <!-- Back to Home -->
+      <a routerLink="/" class="absolute top-6 left-6 flex items-center gap-2 text-slate-500 hover:text-sage transition-colors font-medium">
+        <span class="text-xl">←</span>
+        <span>RETOUR</span>
+      </a>
+
       <div class="w-full max-w-md">
         <div class="text-center mb-8">
           <h1 class="text-3xl font-bold text-night mb-2">Rejoindre Sama Link</h1>

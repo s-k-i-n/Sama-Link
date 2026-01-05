@@ -48,3 +48,5 @@
 {"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
 {"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
 {"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
+{"level":"info","message":"Utilisateur connecté : Mahmoud Sarr","service":"sama-link-backend"}
+{"level":"info","message":"Nouvelle confession créée par Mahmoud Sarr","service":"sama-link-backend"}

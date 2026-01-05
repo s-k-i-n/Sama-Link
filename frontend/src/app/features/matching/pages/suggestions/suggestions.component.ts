@@ -13,8 +13,10 @@ import { Router } from '@angular/router';
   template: `
     <div class="min-h-screen bg-ivory flex flex-col">
       <!-- Header -->
-      <div class="py-4 px-6 text-center">
-        <h1 class="text-xl font-bold text-night">Suggestions pour vous</h1>
+      <div class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center sticky top-0 z-20">
+        <button routerLink="/feed" class="text-xl font-bold text-sage hover:scale-105 transition-transform">Sama Link</button>
+        <h1 class="text-sm font-bold text-night uppercase tracking-wider">Suggestions</h1>
+        <div class="w-20"></div> <!-- Balance the logo width -->
       </div>
 
       <!-- Main Content -->

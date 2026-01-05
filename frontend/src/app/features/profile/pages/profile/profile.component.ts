@@ -15,6 +15,9 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
     <div class="min-h-screen bg-ivory pb-20">
       <!-- Header / Cover -->
       <div class="h-40 bg-night relative">
+         <button (click)="goHome()" class="absolute top-4 left-4 text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-all z-10" title="Retour Accueil">
+            <span class="text-xl">🏠</span>
+         </button>
          <button (click)="goToSettings()" class="absolute top-4 right-4 text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-all z-10" title="Paramètres">
             <span class="text-xl">⚙️</span>
          </button>
@@ -163,5 +166,9 @@ export class ProfileComponent {
 
   goToSettings() {
     this.router.navigate(['/profile/settings']);
+  }
+
+  goHome() {
+    this.router.navigate(['/feed']);
   }
 }

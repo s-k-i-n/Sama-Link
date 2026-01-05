@@ -11,11 +11,16 @@ import { ProfileService } from '../../../profile/services/profile.service';
   standalone: true,
   imports: [CommonModule, PaymentModalComponent, SlButtonComponent],
   template: `
-    <div class="min-h-screen bg-slate-50 pb-20">
-       <div class="relative bg-night py-16 px-4 text-center overflow-hidden">
-          <!-- Background decoration -->
-          <div class="absolute inset-0 bg-gradient-to-r from-night via-slate-900 to-night z-0"></div>
-          <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+     <div class="min-h-screen bg-slate-50 pb-20">
+        <div class="relative bg-night py-16 px-4 text-center overflow-hidden">
+           <!-- Back to Home -->
+           <button (click)="goHome()" class="absolute top-4 left-4 text-white/50 hover:text-white p-2 rounded-full hover:bg-white/10 transition-all z-10" title="Retour Accueil">
+              <span class="text-xl">🏠</span>
+           </button>
+
+           <!-- Background decoration -->
+           <div class="absolute inset-0 bg-gradient-to-r from-night via-slate-900 to-night z-0"></div>
+           <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
           
           <div class="relative z-10 max-w-2xl mx-auto">
              <div class="inline-block px-3 py-1 mb-4 rounded-full bg-red-100 text-red-600 text-xs font-bold tracking-widest uppercase">
@@ -119,5 +124,9 @@ export class PricingComponent {
 
   goBack() {
     this.router.navigate(['/profile']);
+  }
+
+  goHome() {
+    this.router.navigate(['/feed']);
   }
 }
