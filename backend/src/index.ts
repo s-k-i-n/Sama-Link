@@ -52,9 +52,13 @@ import feedRoutes from './routes/feed.routes';
 import interactionRoutes from './routes/interaction.routes';
 
 // Utilisation des routes
+console.log("Enregistrement des routes...");
 app.use('/api/auth', authRoutes);
+console.log("Routes Auth enregistrées");
 app.use('/api/feed', feedRoutes);
+console.log("Routes Feed enregistrées");
 app.use('/api/interactions', interactionRoutes);
+console.log("Routes Interactions enregistrées");
 
 // Route de base pour vérifier que le serveur tourne
 app.get("/", (req, res) => {

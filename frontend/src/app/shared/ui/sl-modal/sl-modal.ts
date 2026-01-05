@@ -1,11 +1,10 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SlButtonComponent } from '../sl-button/sl-button';
 
 @Component({
   selector: 'sl-modal',
   standalone: true,
-  imports: [CommonModule, SlButtonComponent],
+  imports: [CommonModule],
   template: `
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
          *ngIf="isOpen"

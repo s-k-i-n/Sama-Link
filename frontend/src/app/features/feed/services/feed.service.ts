@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Confession } from '../../../core/models/confession.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -45,12 +46,21 @@ export class FeedService {
   }
 
   addConfession(content: string, location: string = 'Inconnu', isAnonymous: boolean = true) {
-    return this.http.post<any>(this.apiUrl, { content, location, isAnonymous }).subscribe({
-      next: (res) => {
-        // Ajout optimiste ou recharger
-        this.loadConfessions();
-      }
-    });
+    return this.http.post<any>(this.apiUrl, { content, location, isAnonymous }).pipe(
+      tap(() => this.loadConfessions())
+    );
+  }
+
+  deleteConfession(id: string) {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
+      tap(() => this.loadConfessions())
+    );
+  }
+
+  updateConfession(id: string, content: string) {
+    return this.http.patch<any>(`${this.apiUrl}/${id}`, { content }).pipe(
+      tap(() => this.loadConfessions())
+    );
   }
 
   toggleLike(id: string) {

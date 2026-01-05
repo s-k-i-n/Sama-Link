@@ -1,6 +1,7 @@
 export interface Confession {
   id: string;
   content: string;
+  authorId: string;
   authorAlias?: string; // Optional custom alias, defaults to "Anonyme"
   createdAt: Date;
   likes: number;

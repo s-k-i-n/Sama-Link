@@ -1,10 +1,11 @@
-import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
 import { Confession } from '../../../../core/models/confession.model';
 import { ModerationService } from '../../../../core/services/moderation.service';
 import { FeedService } from '../../services/feed.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-confession-card',
@@ -32,9 +33,24 @@ import { FeedService } from '../../services/feed.service';
           
           <!-- Dropdown Menu -->
           <div *ngIf="isMenuOpen()" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 py-1 z-10 animate-in fade-in zoom-in-95 duration-200">
+             <!-- Actions Propriétaire -->
+             <ng-container *ngIf="isOwner()">
+               <button 
+                 *ngIf="canEdit()"
+                 (click)="startEdit()"
+                 class="w-full text-left px-4 py-2 text-sm text-sage hover:bg-sage/5 flex items-center gap-2 border-b border-slate-50">
+                 <span>✏️</span> Modifier
+               </button>
+               <button 
+                 (click)="onDelete()"
+                 class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-b border-slate-50">
+                 <span>🗑️</span> Supprimer
+               </button>
+             </ng-container>
+
              <button 
                (click)="report()"
-               class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+               class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">
                <span>⚠️</span> Signaler
              </button>
              <button class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">
@@ -47,7 +63,27 @@ import { FeedService } from '../../services/feed.service';
       </div>
 
       <!-- Content -->
-      <p class="text-night text-lg leading-relaxed mb-4 whitespace-pre-wrap">{{ confession.content }}</p>
+      <div *ngIf="!isEditing(); else editMode">
+        <p class="text-night text-lg leading-relaxed mb-4 whitespace-pre-wrap">{{ confession.content }}</p>
+      </div>
+      
+      <ng-template #editMode>
+        <div class="mb-4">
+          <textarea 
+            [(ngModel)]="editedContent" 
+            rows="3"
+            class="w-full p-2 border border-sage rounded-lg focus:ring-2 focus:ring-sage/20 outline-none text-night"
+            placeholder="Modifiez votre confession..."
+          ></textarea>
+          <div class="flex justify-end gap-2 mt-2">
+            <button (click)="cancelEdit()" class="text-xs text-slate-400 hover:text-slate-600">Annuler</button>
+            <button (click)="saveEdit()" [disabled]="!editedContent().trim() || editedContent() === confession.content" 
+                    class="bg-sage text-white px-3 py-1 rounded-full text-xs font-bold disabled:opacity-50">
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </ng-template>
 
       <!-- Actions -->
       <div class="flex items-center justify-between pt-3 border-t border-slate-50">
@@ -67,10 +103,10 @@ import { FeedService } from '../../services/feed.service';
             <span class="text-xl">💬</span>
             <span class="font-medium text-sm">{{ confession.commentsCount }}</span>
           </button>
-
-          <button class="flex items-center space-x-1.5 text-slate-500 hover:text-amber transition-colors">
-            <span class="text-xl">🔗</span>
-          </button>
+        </div>
+        
+        <div *ngIf="isOwner() && canEdit()" class="text-[10px] text-slate-300 italic">
+          Modifiable pendant encore {{ editTimeRemaining() }}s
         </div>
       </div>
       
@@ -109,12 +145,13 @@ import { FeedService } from '../../services/feed.service';
     </sl-card>
   `
 })
-export class ConfessionCardComponent {
+export class ConfessionCardComponent implements OnInit, OnDestroy {
   @Input({ required: true }) confession!: Confession;
   @Output() like = new EventEmitter<string>();
 
   moderationService = inject(ModerationService);
   feedService = inject(FeedService);
+  authService = inject(AuthService);
   
   isMenuOpen = signal(false);
   showReportToast = signal(false);
@@ -123,6 +160,45 @@ export class ConfessionCardComponent {
   comments = signal<any[]>([]);
   isLoadingComments = signal(false);
   newCommentContent = signal('');
+
+  // Edit / Delete Logic
+  isEditing = signal(false);
+  editedContent = signal('');
+  currentTime = signal(new Date());
+  private timer: any;
+
+  isOwner = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.id === this.confession.authorId;
+  });
+
+  canEdit = computed(() => {
+    const createdAt = new Date(this.confession.createdAt).getTime();
+    const now = this.currentTime().getTime();
+    const diff = now - createdAt;
+    return diff < 2 * 60 * 1000; // 2 minutes
+  });
+
+  editTimeRemaining = computed(() => {
+    const createdAt = new Date(this.confession.createdAt).getTime();
+    const now = this.currentTime().getTime();
+    const remaining = Math.max(0, Math.floor((120000 - (now - createdAt)) / 1000));
+    return remaining;
+  });
+
+  ngOnInit() {
+    // Update timer every second to refresh "canEdit" and "editTimeRemaining"
+    this.timer = setInterval(() => {
+      this.currentTime.set(new Date());
+      if (!this.canEdit() && this.isEditing()) {
+        this.cancelEdit();
+      }
+    }, 1000);
+  }
+
+  ngOnDestroy() {
+    if (this.timer) clearInterval(this.timer);
+  }
 
   toggleComments() {
     this.showComments.update(v => !v);
@@ -150,7 +226,6 @@ export class ConfessionCardComponent {
       next: (res: any) => {
         this.comments.update(list => [...list, res.comment]);
         this.newCommentContent.set('');
-        // Incrémenter le compteur local (imparfait mais rapide pour l'UI)
         this.confession.commentsCount++;
       }
     });
@@ -169,5 +244,42 @@ export class ConfessionCardComponent {
     this.isMenuOpen.set(false);
     this.showReportToast.set(true);
     setTimeout(() => this.showReportToast.set(false), 3000);
+  }
+
+  // Action methods
+  onDelete() {
+    if (confirm('Voulez-vous vraiment supprimer cette confession ?')) {
+      this.feedService.deleteConfession(this.confession.id).subscribe();
+    }
+    this.isMenuOpen.set(false);
+  }
+
+  startEdit() {
+    this.isEditing.set(true);
+    this.editedContent.set(this.confession.content);
+    this.isMenuOpen.set(false);
+  }
+
+  cancelEdit() {
+    this.isEditing.set(false);
+  }
+
+  saveEdit() {
+    const newContent = this.editedContent().trim();
+    if (!newContent || newContent === this.confession.content) {
+      this.isEditing.set(false);
+      return;
+    }
+
+    this.feedService.updateConfession(this.confession.id, newContent).subscribe({
+      next: () => {
+        this.confession.content = newContent;
+        this.isEditing.set(false);
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Erreur lors de la modification');
+        this.isEditing.set(false);
+      }
+    });
   }
 }

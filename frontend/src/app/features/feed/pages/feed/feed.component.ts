@@ -3,15 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FeedService } from '../../services/feed.service';
 import { ConfessionCardComponent } from '../../components/confession-card/confession-card.component';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
-
 import { CreateConfessionModalComponent } from '../../components/create-confession-modal/create-confession-modal.component';
 import { ProfileService } from '../../../profile/services/profile.service';
-
+import { AuthService } from '../../../../core/services/auth.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-feed',
   standalone: true,
-  imports: [CommonModule, ConfessionCardComponent, CreateConfessionModalComponent],
+  imports: [CommonModule, ConfessionCardComponent, CreateConfessionModalComponent, RouterLink],
   template: `
     <div class="min-h-screen bg-ivory dark:bg-night pb-20 transition-colors duration-300">
       <!-- Top Bar -->
@@ -21,15 +21,25 @@ import { ProfileService } from '../../../profile/services/profile.service';
           <div class="flex gap-2 items-center">
             
             <!-- Dark Mode Toggle -->
-            <button (click)="toggleTheme()" class="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors" [title]="profileService.settings().theme === 'light' ? 'Passer en mode sombre' : 'Passer en mode clair'">
+            <button (click)="toggleTheme()" class="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
               {{ profileService.settings().theme === 'light' ? '🌙' : '☀️' }}
             </button>
 
-            <!-- Notification -->
-            <button class="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative">
-              🔔
-              <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <!-- User Profile / Auth -->
+            <ng-container *ngIf="authService.isAuthenticated(); else guestView">
+              <button 
+                routerLink="/profile"
+                class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
+                <img *ngIf="authService.currentUser()?.profilePhotoUrl" [src]="authService.currentUser()?.profilePhotoUrl" class="w-full h-full object-cover">
+              </button>
+              <button (click)="authService.logout()" class="text-xs text-slate-500 hover:text-red-500 font-medium ml-1">Quitter</button>
+            </ng-container>
+
+            <ng-template #guestView>
+              <a routerLink="/auth/login" class="text-sm font-bold text-sage px-3 py-1 border border-sage rounded-full hover:bg-sage hover:text-white transition-all">
+                Connexion
+              </a>
+            </ng-template>
           </div>
         </div>
       </div>
@@ -102,6 +112,7 @@ import { ProfileService } from '../../../profile/services/profile.service';
 export class FeedComponent {
   feedService = inject(FeedService);
   profileService = inject(ProfileService);
+  authService = inject(AuthService);
   
   @ViewChild('createModal') createModal!: CreateConfessionModalComponent;
 

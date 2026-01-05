@@ -39,8 +39,8 @@ import { FeedService } from '../../services/feed.service';
 
         <div class="bg-slate-50 -mx-6 -mb-4 px-6 py-3 flex justify-end gap-2 border-t border-slate-100">
           <sl-button type="button" variant="ghost" (click)="close()">Annuler</sl-button>
-          <sl-button type="submit" variant="primary" [disabled]="form.invalid || charCount() > 500">
-            {{ form.get('isAnonymous')?.value ? 'Publier (Anonyme)' : 'Publier (Signé)' }}
+          <sl-button type="submit" variant="primary" [disabled]="form.invalid || charCount() > 500 || isLoading()">
+            {{ isLoading() ? 'Publication...' : (form.get('isAnonymous')?.value ? 'Publier (Anonyme)' : 'Publier (Signé)') }}
           </sl-button>
         </div>
       </form>
@@ -52,7 +52,7 @@ export class CreateConfessionModalComponent {
   private feedService = inject(FeedService);
 
   isOpen = signal(false);
-  
+  isLoading = signal(false);
   form = this.fb.group({
     content: ['', [Validators.required, Validators.maxLength(500)]],
     isAnonymous: [true]
@@ -78,15 +78,24 @@ export class CreateConfessionModalComponent {
 
   submit() {
     if (this.form.valid) {
-      // Pour l'instant on garde Dakar par défaut ou on pourrait utiliser la géolocalisation
+      this.isLoading.set(true);
       const location = 'Dakar'; 
       
       this.feedService.addConfession(
         this.form.value.content || '', 
         location,
         this.form.value.isAnonymous ?? true
-      );
-      this.close();
+      ).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.form.reset({ isAnonymous: true });
+          this.close();
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          alert(err.error?.message || 'Erreur lors de la publication');
+        }
+      });
     }
   }
 }

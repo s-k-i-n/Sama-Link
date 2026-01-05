@@ -49,6 +49,7 @@ export const getConfessions = async (req: Request, res: Response) => {
       content: c.content,
       createdAt: c.createdAt,
       location: c.location,
+      authorId: c.authorId,
       authorAlias: c.isAnonymous ? 'Anonyme' : c.author.username,
       likes: c._count.reactions,
       commentsCount: c._count.comments,
@@ -102,5 +103,78 @@ export const createConfession = async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Erreur lors de la création de la confession :', error);
     res.status(500).json({ message: 'Erreur lors de la publication.' });
+  }
+};
+
+/**
+ * Supprimer une confession
+ */
+export const deleteConfession = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).userId;
+
+    const confession = await prisma.confession.findUnique({
+      where: { id }
+    });
+
+    if (!confession) {
+      return res.status(404).json({ message: 'Confession non trouvée.' });
+    }
+
+    if (confession.authorId !== userId) {
+      return res.status(403).json({ message: 'Vous n\'êtes pas l\'auteur de cette confession.' });
+    }
+
+    await prisma.confession.delete({
+      where: { id }
+    });
+
+    logger.info(`Confession ${id} supprimée par ${userId}`);
+    res.json({ message: 'Confession supprimée avec succès.' });
+  } catch (error) {
+    logger.error('Erreur lors de la suppression de la confession :', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression.' });
+  }
+};
+
+/**
+ * Modifier une confession (Limite 2 minutes)
+ */
+export const updateConfession = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    const userId = (req as any).userId;
+
+    const confession = await prisma.confession.findUnique({
+      where: { id }
+    });
+
+    if (!confession) {
+      return res.status(404).json({ message: 'Confession non trouvée.' });
+    }
+
+    if (confession.authorId !== userId) {
+      return res.status(403).json({ message: 'Vous n\'êtes pas l\'auteur de cette confession.' });
+    }
+
+    // Vérifier le délai de 2 minutes (120000 ms)
+    const now = new Date();
+    const diff = now.getTime() - confession.createdAt.getTime();
+    if (diff > 2 * 60 * 1000) {
+      return res.status(400).json({ message: 'Le délai de 2 minutes pour modifier cette confession est dépassé.' });
+    }
+
+    const updated = await prisma.confession.update({
+      where: { id },
+      data: { content }
+    });
+
+    logger.info(`Confession ${id} modifiée par ${userId}`);
+    res.json({ message: 'Confession modifiée !', content: updated.content });
+  } catch (error) {
+    logger.error('Erreur lors de la modification de la confession :', error);
+    res.status(500).json({ message: 'Erreur lors de la modification.' });
   }
 };

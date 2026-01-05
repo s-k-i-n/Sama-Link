@@ -151,7 +151,7 @@ export class ProfileComponent {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        this.profileService.updatePhoto(result);
+        this.profileService.updateProfile({ profilePhotoUrl: result });
       };
       reader.readAsDataURL(file);
     }
