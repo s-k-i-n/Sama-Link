@@ -91,14 +91,31 @@ import { RouterLink } from '@angular/router';
           </button>
         </div>
  
-         <!-- List -->
-        <div class="space-y-4">
-           <app-confession-card 
-             *ngFor="let confession of feedService.confessions()" 
-             [confession]="confession"
-             (like)="feedService.toggleLike($event)"
-           ></app-confession-card>
-        </div>
+         <!-- List / Empty State -->
+         <div class="space-y-4">
+            <app-confession-card 
+              *ngFor="let confession of feedService.confessions()" 
+              [confession]="confession"
+              (like)="feedService.toggleLike($event)"
+            ></app-confession-card>
+            
+            <!-- Empty State -->
+            <div *ngIf="!feedService.isLoading() && feedService.confessions().length === 0" class="py-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+               <div class="text-6xl mb-4">🍃</div>
+               <h3 class="text-lg font-bold text-slate-400 mb-2">Presque trop calme ici...</h3>
+               <p class="text-sm text-slate-400 px-6">
+                 {{ feedService.filterSig() === 'mine' 
+                    ? "Vous n'avez pas encore publié de confession ou vous venez de tout supprimer." 
+                    : "Aucune confession ne correspond à ce filtre pour le moment." }}
+               </p>
+               <button 
+                 *ngIf="feedService.filterSig() !== 'recent'"
+                 (click)="feedService.setFilter('recent')"
+                 class="mt-6 text-sage font-bold hover:underline">
+                 Retourner au flux récent
+               </button>
+            </div>
+         </div>
 
         <!-- Infinite Scroll Trigger -->
         <div class="py-8 text-center text-slate-400 text-sm">

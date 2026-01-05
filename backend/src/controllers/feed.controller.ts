@@ -23,10 +23,15 @@ export const getConfessions = async (req: Request, res: Response) => {
         where = { location: 'Dakar' }; 
         break;
       case 'mine':
-        // Nécessite authentification (sera géré par middleware plus tard)
-        // Pour le moment on mock ou on demande un userId dans le query
-        const userId = req.body?.userId || req.query?.userId;
-        if (userId) where = { authorId: userId };
+        console.log('Filtre "mine" détecté. Query:', req.query);
+        // On récupère le userId de la query (depuis FeedService)
+        const userId = req.query?.userId as string;
+        if (userId) {
+          where = { authorId: userId };
+          console.log('Filtrage par authorId:', userId);
+        } else {
+          console.warn('Filtre "mine" demandé mais aucun userId fourni.');
+        }
         break;
     }
 
@@ -44,23 +49,27 @@ export const getConfessions = async (req: Request, res: Response) => {
     });
 
     // Reformater pour le frontend
-    const formatted = confessions.map(c => ({
-      id: c.id,
-      content: c.content,
-      createdAt: c.createdAt,
-      location: c.location,
-      authorId: c.authorId,
-      authorAlias: c.isAnonymous ? 'Anonyme' : c.author.username,
-      likes: c._count.reactions,
-      commentsCount: c._count.comments,
-      isLiked: false // Sera calculé dynamiquement par utilisateur connecté
-    }));
+    const formatted = confessions.map(c => {
+      try {
+        return {
+          id: c.id,
+          content: c.content,
+          createdAt: c.createdAt,
+          location: c.location,
+          authorId: c.authorId,
+          authorAlias: c.isAnonymous ? 'Anonyme' : (c.author?.username || 'Utilisateur inconnu'),
+          likes: c._count.reactions,
+          commentsCount: c._count.comments,
+          isLiked: false 
+        };
+      } catch (err) {
+        console.error('Erreur formatage confession:', c.id, err);
+        return null;
+      }
+    }).filter(c => c !== null);
 
     if (formatted.length > 0) {
-      console.log('Exemple confession renvoyée (1ère):', {
-        id: formatted[0].id,
-        authorId: formatted[0].authorId
-      });
+      console.log(`Renvoyé ${formatted.length} confessions.`);
     }
 
     res.json(formatted);
