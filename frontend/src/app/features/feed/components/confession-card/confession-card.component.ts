@@ -70,11 +70,11 @@ import { TimeService } from '../../../../core/services/time.service';
         </p>
 
         <!-- Media / Photo -->
-        <div *ngIf="!isEditing() && confession.imageUrl" class="mb-4 -mx-2">
-          <img 
+        <div *ngIf="!isEditing() && confession.imageUrl" class="mb-4 -mx-2 rounded-xl overflow-hidden">
+          <img loading="lazy" 
+            [alt]="'Image de la confession: ' + confession.content.substring(0, 30)" 
             [src]="confession.imageUrl" 
-            class="w-full h-auto max-h-96 object-cover rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm"
-            [alt]="'Image de la confession ' + confession.id">
+            class="w-full h-auto object-contain max-h-[500px] bg-slate-50 dark:bg-slate-900">
         </div>
       
       <ng-template #editMode>

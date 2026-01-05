@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { Message, ChatSession } from '../../../core/models/chat.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { StorageService } from '../../../core/services/storage.service';
 import { tap } from 'rxjs/operators';
 
 @Injectable({
@@ -14,6 +15,7 @@ export class ChatService implements OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private storageService = inject(StorageService);
   private apiUrl = `${environment.apiUrl}/messaging`;
   private socket!: Socket;
 
@@ -37,7 +39,7 @@ export class ChatService implements OnDestroy {
 
   private initSocket() {
     this.socket = io(environment.apiUrl, {
-      auth: { token: localStorage.getItem('access_token') }
+      auth: { token: this.storageService.getItem('access_token') }
     });
 
     this.socket.on('connect', () => console.log('Connecté au serveur Socket.io 💬'));

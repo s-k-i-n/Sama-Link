@@ -22,22 +22,22 @@ import { User } from '../../../../core/models/user.model';
 
       <main class="flex-grow container mx-auto max-w-lg p-4 relative flex flex-col items-center justify-center">
         <!-- Loading State -->
-        <div *ngIf="matchingService.loading()" class="flex flex-col items-center py-20 animate-pulse">
+        <div *ngIf="matchingService.isLoading()" class="flex flex-col items-center py-20 animate-pulse">
           <div class="w-64 h-96 bg-slate-200 rounded-3xl mb-8"></div>
           <h3 class="text-lg font-bold text-slate-400">Recherche de profils...</h3>
           <p class="text-sm text-slate-300">Nous cherchons des personnes compatibles à proximité</p>
         </div>
 
         <!-- Empty State / No more users -->
-        <div *ngIf="!matchingService.loading() && matchingService.suggestions().length === 0" class="text-center py-20 px-6">
+        <div *ngIf="!matchingService.isLoading() && matchingService.suggestions().length === 0" class="text-center py-20 px-6">
           <div class="text-6xl mb-6">🏝️</div>
           <h2 class="text-2xl font-bold text-night mb-2">C'est tout pour aujourd'hui !</h2>
           <p class="text-slate-500 mb-8 max-w-xs mx-auto">Revenez plus tard pour découvrir de nouveaux profils ou partagez une confession pour attirer l'attention.</p>
-          <button (click)="matchingService.getSuggestions().subscribe()" class="btn btn-primary rounded-full px-8">Réessayer</button>
+          <button (click)="matchingService.loadSuggestions()" class="btn btn-primary rounded-full px-8">Réessayer</button>
         </div>
 
         <!-- Discovery Stack -->
-        <div *ngIf="!matchingService.loading() && matchingService.suggestions().length > 0" class="w-full relative h-[600px] flex items-center justify-center">
+        <div *ngIf="!matchingService.isLoading() && matchingService.suggestions().length > 0" class="w-full relative h-[600px] flex items-center justify-center">
           <app-swipe-card 
             *ngFor="let user of [matchingService.suggestions()[0]]"
             [user]="user"
@@ -53,7 +53,7 @@ import { User } from '../../../../core/models/user.model';
         [isOpen]="isMatchModalOpen()"
         [matchedUser]="matchedUser()"
         (close)="closeMatch()"
-        (message)="goToChat($event)">
+        (message)="goToChat()">
       </app-match-modal>
     </div>
   `
@@ -66,20 +66,23 @@ export class SuggestionsComponent implements OnInit {
   
   isMatchModalOpen = signal(false);
   matchedUser = signal<User | null>(null);
+  currentMatchId = signal<string | null>(null);
 
   ngOnInit() {
     this.title.setTitle('Rencontrer des Gens au Sénégal | Trouve des Affinités Amoureuses');
     this.meta.updateTag({ name: 'description', content: 'Explorez des profils authentiques basés sur des affinités réelles. Sama Link vous aide à trouver l\'amour à Dakar et partout au Sénégal.' });
+    this.meta.updateTag({ rel: 'canonical', href: 'https://samalink.sn/matching' });
     
-    // Charger les suggestions au démarrage
-    this.matchingService.getSuggestions().subscribe();
+    // Charger les suggestions au démarrage (déjà fait dans le constructeur du service, mais on peut forcer ici)
+    this.matchingService.loadSuggestions();
   }
 
   onLike(user: User) {
     this.matchingService.swipe(user.id, 'like').subscribe({
       next: (res) => {
-        if (res.matchCreated) {
+        if (res && res.isMatch) {
           this.matchedUser.set(user);
+          this.currentMatchId.set(res.matchId);
           this.isMatchModalOpen.set(true);
         }
       }
@@ -95,8 +98,13 @@ export class SuggestionsComponent implements OnInit {
     this.matchedUser.set(null);
   }
 
-  goToChat(conversationId: string) {
+  goToChat() {
+    const matchId = this.currentMatchId();
     this.isMatchModalOpen.set(false);
-    this.router.navigate(['/messages', conversationId]);
+    if (matchId) {
+      this.router.navigate(['/messages', matchId]);
+    } else {
+      this.router.navigate(['/messages']);
+    }
   }
 }

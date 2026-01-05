@@ -1,12 +1,14 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { StorageService } from '../../../core/services/storage.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
   private authService = inject(AuthService);
+  private storageService = inject(StorageService);
 
   // Sync with AuthService currentUser
   currentUser = computed(() => {
@@ -33,7 +35,7 @@ export class ProfileService {
 
   constructor() {
     // Load settings from storage/defaults
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = this.storageService.getItem('theme') || 'light';
     this.updateSettings({ ...this.settings(), theme: savedTheme });
     this.applyTheme(savedTheme);
   }
@@ -42,7 +44,7 @@ export class ProfileService {
     this.settings.update(s => ({ ...s, ...updates }));
     if (updates.theme) {
       this.applyTheme(updates.theme);
-      localStorage.setItem('theme', updates.theme);
+      this.storageService.setItem('theme', updates.theme);
     }
   }
 

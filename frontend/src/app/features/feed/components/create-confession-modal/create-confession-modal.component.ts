@@ -26,7 +26,7 @@ import { FeedService } from '../../services/feed.service';
           
           <!-- Image Preview -->
           <div *ngIf="imagePreview()" class="mt-3 relative inline-block">
-            <img [src]="imagePreview()" class="h-32 rounded-lg object-cover border border-slate-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+            <img [src]="imagePreview()" loading="lazy" alt="Aperçu de l'image de confession" class="h-32 rounded-lg object-cover border border-slate-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
             <button 
               type="button" 
               (click)="removeImage()" 

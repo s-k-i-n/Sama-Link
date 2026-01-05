@@ -103,5 +103,6 @@ export class LandingComponent implements OnInit {
     this.meta.updateTag({ name: 'description', content: 'Bienvenue sur Sama Link, le lieu où les confessions et les rencontres amoureuses se rencontrent. Rejoins notre communauté au Sénégal et partage tes histoires.' });
     this.meta.updateTag({ property: 'og:title', content: 'Sama Link - Rencontres & Confessions au Sénégal' });
     this.meta.updateTag({ name: 'keywords', content: 'rencontres Sénégal, confessions anonymes dakar, amour sénégal, site de rencontre dakar' });
+    this.meta.updateTag({ rel: 'canonical', href: 'https://samalink.sn/' });
   }
 }

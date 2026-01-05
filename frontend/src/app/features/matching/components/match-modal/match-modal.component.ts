@@ -24,7 +24,7 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
              <!-- Other -->
              <div class="w-24 h-24 rounded-full bg-white border-4 border-white overflow-hidden shadow-2xl">
                  <div *ngIf="matchedUser?.profilePhotoUrl; else noPhoto" class="w-full h-full">
-                   <img [src]="matchedUser!.profilePhotoUrl" class="w-full h-full object-cover">
+                   <img [src]="matchedUser!.profilePhotoUrl" loading="lazy" [alt]="'Photo de ' + matchedUser?.username" class="w-full h-full object-cover">
                  </div>
                  <ng-template #noPhoto>
                     <div class="w-full h-full bg-amber items-center justify-center flex text-2xl text-white font-bold">

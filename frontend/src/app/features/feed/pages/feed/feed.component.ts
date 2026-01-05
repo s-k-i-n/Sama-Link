@@ -31,7 +31,7 @@ import { Meta, Title } from '@angular/platform-browser';
               <button 
                 routerLink="/profile"
                 class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
-                <img *ngIf="authService.currentUser()?.profilePhotoUrl" [src]="authService.currentUser()?.profilePhotoUrl" class="w-full h-full object-cover">
+                <img *ngIf="authService.currentUser()?.profilePhotoUrl" [src]="authService.currentUser()?.profilePhotoUrl" loading="lazy" [alt]="'Photo de ' + authService.currentUser()?.username" class="w-full h-full object-cover">
               </button>
               <button (click)="authService.logout()" class="text-xs text-slate-500 hover:text-red-500 font-medium ml-1">Quitter</button>
             </ng-container>
@@ -147,7 +147,8 @@ export class FeedComponent implements OnInit {
 
   ngOnInit() {
     this.title.setTitle('Flux Confessions | Découvrez les secrets de votre communauté au Sénégal');
-    this.meta.updateTag({ name: 'description', content: 'Partage tes confessions les plus profondes ou découvre celles des autres. Rejoins des milliers de personnes qui se confient en toute sécurité.' });
+    this.meta.updateTag({ name: 'description', content: 'Découvrez des confessions anonymes, partagez vos pensées et connectez-vous avec des gens authentiques à Dakar et au Sénégal.' });
+    this.meta.updateTag({ rel: 'canonical', href: 'https://samalink.sn/feed' });
   }
 
   openCreateModal() {

@@ -45,7 +45,16 @@ const io = new Server(httpServer, {
 });
 
 // Middlewares de sécurité et utilitaires
-app.use(helmet()); // Sécurisation des headers HTTP
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "http://localhost:3000", "http://localhost:4200"],
+      connectSrc: ["'self'", "http://localhost:3000"],
+    }
+  }
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:4200",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -100,61 +109,11 @@ app.get("/", (req, res) => {
   });
 });
 
-// Gestion des connexions Socket.io
-io.on("connection", (socket) => {
-  logger.info(`Nouvelle connexion Socket.io : ${socket.id}`);
+// Import des sockets
+import { initSocket } from './socket/index';
 
-  // Rejoindre une conversation (room)
-  socket.on("join_conversation", (conversationId: string) => {
-    socket.join(conversationId);
-    logger.info(`Socket ${socket.id} a rejoint la conversation ${conversationId}`);
-  });
-
-  // Envoyer un message
-  socket.on("send_message", async (data: { 
-    conversationId: string, 
-    senderId: string, 
-    receiverId: string, 
-    content: string 
-  }) => {
-    try {
-      const { conversationId, senderId, receiverId, content } = data;
-
-      // Sauvegarder dans la DB
-      const message = await prisma.message.create({
-        data: {
-          conversationId,
-          senderId,
-          receiverId,
-          content
-        },
-        include: {
-          sender: { select: { username: true } }
-        }
-      });
-
-      // Emettre à tous les membres de la room (y compris l'envoyeur pour confirmation si nécessaire, 
-      // ou on peut utiliser broadcast pour les autres)
-      io.to(conversationId).emit("new_message", message);
-      
-      logger.info(`Message envoyé dans ${conversationId} par ${senderId}`);
-    } catch (err) {
-      logger.error('Erreur Socket send_message:', err);
-    }
-  });
-
-  // Indicateur de saisie
-  socket.on("typing", (data: { conversationId: string, username: string, isTyping: boolean }) => {
-    socket.to(data.conversationId).emit("user_typing", {
-      username: data.username,
-      isTyping: data.isTyping
-    });
-  });
-
-  socket.on("disconnect", () => {
-    logger.info(`Utilisateur déconnecté : ${socket.id}`);
-  });
-});
+// Initialisation des sockets
+initSocket(io);
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;

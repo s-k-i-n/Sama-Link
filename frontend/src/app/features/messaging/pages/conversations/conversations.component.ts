@@ -26,7 +26,7 @@ import { ChatService } from '../../services/chat.service';
           <!-- Avatar -->
           <div class="relative w-14 h-14 flex-shrink-0">
              <div class="w-full h-full rounded-full bg-slate-200 overflow-hidden">
-                <img *ngIf="chat.userPhotoUrl" [src]="chat.userPhotoUrl" class="w-full h-full object-cover">
+                <img *ngIf="chat.userPhotoUrl" [src]="chat.userPhotoUrl" loading="lazy" [alt]="'Photo de ' + chat.userAlias" class="w-full h-full object-cover">
                 <div *ngIf="!chat.userPhotoUrl" class="w-full h-full flex items-center justify-center bg-amber text-white font-bold text-lg">
                   {{ chat.userAlias.charAt(0) }}
                 </div>
