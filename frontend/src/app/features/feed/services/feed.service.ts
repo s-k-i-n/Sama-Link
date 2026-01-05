@@ -72,6 +72,12 @@ export class FeedService {
     );
   }
 
+  deleteAllMyConfessions() {
+    return this.http.delete<any>(`${this.apiUrl}/mine/all`).pipe(
+      tap(() => this.loadConfessions())
+    );
+  }
+
   toggleLike(id: string) {
     this.http.post<any>(`${this.interactionUrl}/${id}/like`, {}).subscribe({
       next: (res) => {

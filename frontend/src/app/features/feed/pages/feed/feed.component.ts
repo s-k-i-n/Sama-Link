@@ -81,8 +81,17 @@ import { RouterLink } from '@angular/router';
             Mes confessions
           </button>
         </div>
-
-        <!-- List -->
+        
+        <!-- Bulk Actions -->
+        <div *ngIf="feedService.filterSig() === 'mine' && feedService.confessions().length > 0" class="mb-4 flex justify-end">
+          <button 
+            (click)="confirmDeleteAll()"
+            class="text-xs text-red-500 hover:text-red-700 font-medium border border-red-200 px-3 py-1 rounded-full hover:bg-red-50 transition-colors">
+            🗑️ Supprimer toutes mes confessions
+          </button>
+        </div>
+ 
+         <!-- List -->
         <div class="space-y-4">
            <app-confession-card 
              *ngFor="let confession of feedService.confessions()" 
@@ -123,5 +132,14 @@ export class FeedComponent {
   toggleTheme() {
     const current = this.profileService.settings().theme;
     this.profileService.updateSettings({ theme: current === 'light' ? 'dark' : 'light' });
+  }
+
+  confirmDeleteAll() {
+    if (confirm('Êtes-vous sûr de vouloir supprimer TOUTES vos confessions ? Cette action est irréversible.')) {
+      this.feedService.deleteAllMyConfessions().subscribe({
+        next: (res) => alert(res.message),
+        error: (err) => alert('Erreur lors de la suppression groupée')
+      });
+    }
   }
 }

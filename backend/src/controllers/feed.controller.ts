@@ -188,3 +188,24 @@ export const updateConfession = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Erreur lors de la modification.' });
   }
 };
+/**
+ * Supprimer toutes les confessions de l'utilisateur connecté
+ */
+export const deleteAllMyConfessions = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Non authentifié.' });
+    }
+
+    const result = await prisma.confession.deleteMany({
+      where: { authorId: userId }
+    });
+
+    logger.info(`Toutes les confessions (${result.count}) de l'utilisateur ${userId} ont été supprimées.`);
+    res.json({ message: `${result.count} confessions supprimées.`, count: result.count });
+  } catch (error) {
+    logger.error('Erreur lors de la suppression groupée :', error);
+    res.status(500).json({ message: 'Erreur lors de la suppression groupée.' });
+  }
+};
