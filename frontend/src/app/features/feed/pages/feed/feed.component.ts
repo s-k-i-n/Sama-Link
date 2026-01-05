@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, inject, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FeedService } from '../../services/feed.service';
 import { ConfessionCardComponent } from '../../components/confession-card/confession-card.component';
@@ -7,6 +7,7 @@ import { CreateConfessionModalComponent } from '../../components/create-confessi
 import { ProfileService } from '../../../profile/services/profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { RouterLink } from '@angular/router';
+import { Meta, Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-feed',
@@ -135,12 +136,19 @@ import { RouterLink } from '@angular/router';
     </div>
   `
 })
-export class FeedComponent {
+export class FeedComponent implements OnInit {
   feedService = inject(FeedService);
   profileService = inject(ProfileService);
   authService = inject(AuthService);
+  private title = inject(Title);
+  private meta = inject(Meta);
   
   @ViewChild('createModal') createModal!: CreateConfessionModalComponent;
+
+  ngOnInit() {
+    this.title.setTitle('Flux Confessions | Découvrez les secrets de votre communauté au Sénégal');
+    this.meta.updateTag({ name: 'description', content: 'Partage tes confessions les plus profondes ou découvre celles des autres. Rejoins des milliers de personnes qui se confient en toute sécurité.' });
+  }
 
   openCreateModal() {
     this.createModal.open();

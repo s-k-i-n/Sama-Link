@@ -54,7 +54,9 @@ import { Meta, Title } from '@angular/platform-browser';
                 <!-- Inner counter-rotating ring -->
                 <div class="absolute inset-2 border border-dotted border-sage/50 rounded-full animate-spin-reverse-slow"></div>
                 <!-- Icon container -->
-                <div class="absolute inset-0 bg-sage/10 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">🤫</div>
+                <div class="absolute inset-0 bg-sage/10 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
+                  <span role="img" aria-label="Confession amoureuse Sénégal">🤫</span>
+                </div>
             </div>
             <h3 class="text-2xl font-bold mb-3 tracking-tight">Anonymat Garanti</h3>
             <p class="text-slate-600 leading-relaxed">Partagez vos confessions en toute sécurité. Votre identité reste protégée jusqu'à ce que vous décidiez de la révéler.</p>
@@ -97,8 +99,9 @@ export class LandingComponent implements OnInit {
   private meta = inject(Meta);
 
   ngOnInit() {
-    this.title.setTitle('Sama Link - Confessions, Amour et Rencontres au Sénégal');
-    this.meta.updateTag({ name: 'description', content: 'Rejoignez Sama Link, la première plateforme de confessions anonymes au Sénégal. Partagez vos pensées et trouvez l\'amour en toute sincérité.' });
-    this.meta.updateTag({ property: 'og:title', content: 'Sama Link - Confessions Anonymes' });
+    this.title.setTitle('Rencontres et Confessions en ligne | Trouve l\'Amour au Sénégal');
+    this.meta.updateTag({ name: 'description', content: 'Bienvenue sur Sama Link, le lieu où les confessions et les rencontres amoureuses se rencontrent. Rejoins notre communauté au Sénégal et partage tes histoires.' });
+    this.meta.updateTag({ property: 'og:title', content: 'Sama Link - Rencontres & Confessions au Sénégal' });
+    this.meta.updateTag({ name: 'keywords', content: 'rencontres Sénégal, confessions anonymes dakar, amour sénégal, site de rencontre dakar' });
   }
 }
