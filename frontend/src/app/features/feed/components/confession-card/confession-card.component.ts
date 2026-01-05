@@ -70,7 +70,8 @@ import { AuthService } from '../../../../core/services/auth.service';
       <ng-template #editMode>
         <div class="mb-4">
           <textarea 
-            [(ngModel)]="editedContent" 
+            [ngModel]="editedContent()" 
+            (ngModelChange)="editedContent.set($event)"
             rows="3"
             class="w-full p-2 border border-sage rounded-lg focus:ring-2 focus:ring-sage/20 outline-none text-night"
             placeholder="Modifiez votre confession..."
@@ -128,7 +129,8 @@ import { AuthService } from '../../../../core/services/auth.service';
          <div class="flex gap-2 mt-3">
             <input 
               type="text" 
-              [(ngModel)]="newCommentContent" 
+              [ngModel]="newCommentContent()" 
+              (ngModelChange)="newCommentContent.set($event)"
               (keyup.enter)="submitComment()"
               placeholder="Ajouter un commentaire..." 
               class="flex-grow bg-white border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-sage"
@@ -169,14 +171,15 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
 
   isOwner = computed(() => {
     const user = this.authService.currentUser();
-    return user?.id === this.confession.authorId;
+    return !!(user && this.confession.authorId && user.id === this.confession.authorId);
   });
 
   canEdit = computed(() => {
+    if (!this.confession.createdAt) return false;
     const createdAt = new Date(this.confession.createdAt).getTime();
     const now = this.currentTime().getTime();
     const diff = now - createdAt;
-    return diff < 2 * 60 * 1000; // 2 minutes
+    return diff < 2 * 60 * 1000;
   });
 
   editTimeRemaining = computed(() => {

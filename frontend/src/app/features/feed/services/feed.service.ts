@@ -17,6 +17,7 @@ export class FeedService {
   // State
   private confessionsSig = signal<Confession[]>([]);
   filterSig = signal<'recent' | 'popular' | 'nearby' | 'mine'>('recent');
+  isLoading = signal<boolean>(false);
 
   // Selectors
   confessions = computed(() => this.confessionsSig());
@@ -31,6 +32,7 @@ export class FeedService {
   }
 
   loadConfessions() {
+    this.isLoading.set(true);
     const params: any = { filter: this.filterSig() };
     
     // Si c'est le filtre 'mine', on passe le userId
@@ -40,8 +42,15 @@ export class FeedService {
     }
 
     this.http.get<Confession[]>(this.apiUrl, { params }).subscribe({
-      next: (data) => this.confessionsSig.set(data),
-      error: (err) => console.error('Erreur chargement confessions', err)
+      next: (data) => {
+        console.log('Confessions reçues:', data);
+        this.confessionsSig.set(data); // Corrected to confessionsSig
+        this.isLoading.set(false);
+      },
+      error: (err) => { // Corrected error callback syntax
+        console.error('Erreur chargement confessions', err);
+        this.isLoading.set(false); // Set loading to false on error
+      }
     });
   }
 

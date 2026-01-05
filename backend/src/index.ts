@@ -42,7 +42,11 @@ const io = new Server(httpServer, {
 
 // Middlewares de sécurité et utilitaires
 app.use(helmet()); // Sécurisation des headers HTTP
-app.use(cors()); // Gestion du CORS
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:4200",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+})); // Gestion du CORS
 app.use(express.json()); // Parsing du JSON
 app.use(morgan("dev")); // Logging des requêtes HTTP
 

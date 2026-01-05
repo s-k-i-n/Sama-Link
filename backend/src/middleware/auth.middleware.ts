@@ -10,6 +10,7 @@ interface TokenPayload {
  * Middleware pour protéger les routes nécessitant une authentification
  */
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  console.log(`Auth middleware: ${req.method} ${req.path}`);
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -23,6 +24,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
       token, 
       process.env.JWT_SECRET || 'secret_temporaire'
     ) as TokenPayload;
+
+    console.log('Token décodé pour:', decoded.userId);
 
     // Ajouter l'ID de l'utilisateur à l'objet request pour les contrôleurs suivants
     (req as any).userId = decoded.userId;

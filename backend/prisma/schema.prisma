@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,90 +6,80 @@ datasource db {
   provider = "postgresql"
 }
 
-// Modèle Utilisateur
 model User {
-  id            String       @id @default(uuid())
-  email         String       @unique
-  passwordHash  String       @map("password_hash")
-  username      String       @unique
-  bio           String?
-  location      String?
-  avatarUrl     String?      @map("avatar_url")
-  isPremium     Boolean      @default(false) @map("is_premium")
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
-
-  confessions   Confession[]
-  reactions     Reaction[]
-  comments      Comment[]
-  sentMessages  Message[]    @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  
-  // Relations pour les Matchs (complexité car auto-relation)
-  matchesAsA    Match[]      @relation("UserAMatches")
-  matchesAsB    Match[]      @relation("UserBMatches")
+  id               String       @id @default(uuid())
+  email            String       @unique
+  passwordHash     String       @map("password_hash")
+  username         String       @unique
+  bio              String?
+  location         String?
+  avatarUrl        String?      @map("avatar_url")
+  isPremium        Boolean      @default(false) @map("is_premium")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+  comments         Comment[]
+  confessions      Confession[]
+  matchesAsA       Match[]      @relation("UserAMatches")
+  matchesAsB       Match[]      @relation("UserBMatches")
+  receivedMessages Message[]    @relation("ReceivedMessages")
+  sentMessages     Message[]    @relation("SentMessages")
+  reactions        Reaction[]
 }
 
-// Modèle Confession
 model Confession {
-  id          String   @id @default(uuid())
-  author      User     @relation(fields: [authorId], references: [id])
-  authorId    String   @map("author_id")
+  id          String     @id @default(uuid())
+  authorId    String     @map("author_id")
   content     String
-  isAnonymous Boolean  @default(true) @map("is_anonymous")
+  isAnonymous Boolean    @default(true) @map("is_anonymous")
   location    String?
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  reactions   Reaction[]
+  createdAt   DateTime   @default(now()) @map("created_at")
   comments    Comment[]
+  author      User       @relation(fields: [authorId], references: [id])
+  reactions   Reaction[]
 }
 
-// Modèle Réaction (Like)
 model Reaction {
   id           String     @id @default(uuid())
-  user         User       @relation(fields: [userId], references: [id])
   userId       String     @map("user_id")
-  confession   Confession @relation(fields: [confessionId], references: [id])
   confessionId String     @map("confession_id")
-  type         String     @default("like") // Pour extensibilité future (love, haha, etc)
+  type         String     @default("like")
+  confession   Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
 
   @@unique([userId, confessionId])
 }
 
-// Modèle Commentaire
 model Comment {
   id           String     @id @default(uuid())
-  user         User       @relation(fields: [userId], references: [id])
   userId       String     @map("user_id")
-  confession   Confession @relation(fields: [confessionId], references: [id])
   confessionId String     @map("confession_id")
   content      String
   createdAt    DateTime   @default(now()) @map("created_at")
+  confession   Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
 }
 
-// Modèle Match
 model Match {
   id        String   @id @default(uuid())
-  userA     User     @relation("UserAMatches", fields: [userAId], references: [id])
   userAId   String   @map("user_a_id")
-  userB     User     @relation("UserBMatches", fields: [userBId], references: [id])
   userBId   String   @map("user_b_id")
-  status    String   @default("pending") // pending, matched, rejected
+  status    String   @default("pending")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  userA     User     @relation("UserAMatches", fields: [userAId], references: [id])
+  userB     User     @relation("UserBMatches", fields: [userBId], references: [id])
 
   @@unique([userAId, userBId])
 }
 
-// Modèle Message
 model Message {
-  id             String   @id @default(uuid())
-  conversationId String   @map("conversation_id")
-  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
-  senderId       String   @map("sender_id")
-  receiver       User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  receiverId     String   @map("receiver_id")
+  id             String    @id @default(uuid())
+  conversationId String    @map("conversation_id")
+  senderId       String    @map("sender_id")
+  receiverId     String    @map("receiver_id")
   content        String
-  createdAt      DateTime @default(now()) @map("created_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
   readAt         DateTime? @map("read_at")
+  receiver       User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender         User      @relation("SentMessages", fields: [senderId], references: [id])
 }

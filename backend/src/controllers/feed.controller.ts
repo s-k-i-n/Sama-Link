@@ -25,7 +25,7 @@ export const getConfessions = async (req: Request, res: Response) => {
       case 'mine':
         // Nécessite authentification (sera géré par middleware plus tard)
         // Pour le moment on mock ou on demande un userId dans le query
-        const userId = req.body.userId || req.query.userId;
+        const userId = req.body?.userId || req.query?.userId;
         if (userId) where = { authorId: userId };
         break;
     }
@@ -55,6 +55,13 @@ export const getConfessions = async (req: Request, res: Response) => {
       commentsCount: c._count.comments,
       isLiked: false // Sera calculé dynamiquement par utilisateur connecté
     }));
+
+    if (formatted.length > 0) {
+      console.log('Exemple confession renvoyée (1ère):', {
+        id: formatted[0].id,
+        authorId: formatted[0].authorId
+      });
+    }
 
     res.json(formatted);
   } catch (error) {
@@ -95,6 +102,7 @@ export const createConfession = async (req: Request, res: Response) => {
         id: confession.id,
         content: confession.content,
         createdAt: confession.createdAt,
+        authorId: confession.authorId,
         authorAlias: confession.isAnonymous ? 'Anonyme' : confession.author.username,
         likes: 0,
         commentsCount: 0
@@ -113,6 +121,7 @@ export const deleteConfession = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = (req as any).userId;
+    console.log(`Tentative de suppression: ID=${id}, UserID=${userId}`);
 
     const confession = await prisma.confession.findUnique({
       where: { id }
@@ -146,6 +155,7 @@ export const updateConfession = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { content } = req.body;
     const userId = (req as any).userId;
+    console.log(`Tentative de modification: ID=${id}, UserID=${userId}`);
 
     const confession = await prisma.confession.findUnique({
       where: { id }
