@@ -61,7 +61,7 @@ import { ModerationService } from '../../../../core/services/moderation.service'
             <span class="font-medium text-sm">{{ confession.likes }}</span>
           </button>
           
-          <button class="flex items-center space-x-1.5 text-slate-500 hover:text-sage transition-colors">
+          <button (click)="toggleComments()" class="flex items-center space-x-1.5 text-slate-500 hover:text-sage transition-colors">
             <span class="text-xl">💬</span>
             <span class="font-medium text-sm">{{ confession.commentsCount }}</span>
           </button>
@@ -76,6 +76,21 @@ import { ModerationService } from '../../../../core/services/moderation.service'
       <div *ngIf="showReportToast()" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-night text-white text-xs px-3 py-1 rounded-full shadow-lg animate-in fade-in slide-in-from-top-2">
          Signalement envoyé !
       </div>
+
+      <!-- Comments Section (Simple Expansion) -->
+      <div *ngIf="showComments()" class="mt-4 pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
+         <div class="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 mb-2">
+            <strong>Utilisateur1:</strong> C'est vraiment touchant... courage ! ❤️
+         </div>
+         <div class="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 mb-3">
+             <strong>Anonyme:</strong> Je suis passé par là aussi.
+         </div>
+         
+         <div class="flex gap-2">
+            <input type="text" placeholder="Ajouter un commentaire..." class="flex-grow bg-white border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-sage">
+            <button class="text-sage font-medium text-sm hover:underline">Envoyer</button>
+         </div>
+      </div>
     </sl-card>
   `
 })
@@ -87,6 +102,11 @@ export class ConfessionCardComponent {
   
   isMenuOpen = signal(false);
   showReportToast = signal(false);
+  showComments = signal(false);
+
+  toggleComments() {
+    this.showComments.update(v => !v);
+  }
 
   onLike() {
     this.like.emit(this.confession.id);

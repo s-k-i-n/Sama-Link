@@ -111,15 +111,13 @@ export class RegisterComponent {
   onSubmit() {
     if (this.registerForm.valid) {
       this.isLoading.set(true);
-      setTimeout(() => {
-        // Mock success
-        this.authService.login('mock-token-reg', { 
-            email: this.registerForm.value.email,
-            username: this.registerForm.value.username 
-        });
-        this.isLoading.set(false);
-        this.router.navigate(['/onboarding']);
-      }, 1500);
+      // TODO: Connect to Real Backend
+      this.authService.login('mock-token-reg', { 
+         email: this.registerForm.value.email,
+         username: this.registerForm.value.username 
+      });
+      this.isLoading.set(false);
+      this.router.navigate(['/onboarding']);
     } else {
       this.registerForm.markAllAsTouched();
     }

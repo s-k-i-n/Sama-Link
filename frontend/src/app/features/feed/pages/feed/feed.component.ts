@@ -5,23 +5,30 @@ import { ConfessionCardComponent } from '../../components/confession-card/confes
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 
 import { CreateConfessionModalComponent } from '../../components/create-confession-modal/create-confession-modal.component';
+import { ProfileService } from '../../../profile/services/profile.service';
+
 
 @Component({
   selector: 'app-feed',
   standalone: true,
   imports: [CommonModule, ConfessionCardComponent, CreateConfessionModalComponent],
   template: `
-    <div class="min-h-screen bg-ivory pb-20">
+    <div class="min-h-screen bg-ivory dark:bg-night pb-20 transition-colors duration-300">
       <!-- Top Bar -->
-      <div class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div class="sticky top-0 z-30 bg-white/80 dark:bg-night/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div class="container mx-auto max-w-2xl px-4 py-3 flex justify-between items-center">
           <h1 class="text-xl font-bold text-sage">Sama Link</h1>
-          <div class="flex gap-2">
-            <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full">
-              🔍
+          <div class="flex gap-2 items-center">
+            
+            <!-- Dark Mode Toggle -->
+            <button (click)="toggleTheme()" class="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors" [title]="profileService.settings().theme === 'light' ? 'Passer en mode sombre' : 'Passer en mode clair'">
+              {{ profileService.settings().theme === 'light' ? '🌙' : '☀️' }}
             </button>
-            <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full">
+
+            <!-- Notification -->
+            <button class="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative">
               🔔
+              <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
           </div>
         </div>
@@ -39,10 +46,30 @@ import { CreateConfessionModalComponent } from '../../components/create-confessi
 
         <!-- Filters (Scrollable) -->
         <div class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
-          <button class="px-4 py-1.5 bg-night text-white rounded-full text-sm font-medium whitespace-nowrap">Récents</button>
-          <button class="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-sm font-medium whitespace-nowrap">Populaires 🔥</button>
-          <button class="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-sm font-medium whitespace-nowrap">Proximité 📍</button>
-          <button class="px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full text-sm font-medium whitespace-nowrap">Mes confessions</button>
+          <button 
+            (click)="feedService.setFilter('recent')"
+            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+            [ngClass]="feedService.filterSig() === 'recent' ? 'bg-night text-white' : 'bg-white border border-slate-200 text-slate-600'">
+            Récents
+          </button>
+          <button 
+            (click)="feedService.setFilter('popular')"
+            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+            [ngClass]="feedService.filterSig() === 'popular' ? 'bg-amber text-white border-amber' : 'bg-white border border-slate-200 text-slate-600'">
+            Populaires 🔥
+          </button>
+          <button 
+            (click)="feedService.setFilter('nearby')"
+            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+            [ngClass]="feedService.filterSig() === 'nearby' ? 'bg-sage text-white border-sage' : 'bg-white border border-slate-200 text-slate-600'">
+            Proximité 📍
+          </button>
+          <button 
+            (click)="feedService.setFilter('mine')"
+            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+            [ngClass]="feedService.filterSig() === 'mine' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600'">
+            Mes confessions
+          </button>
         </div>
 
         <!-- List -->
@@ -74,10 +101,16 @@ import { CreateConfessionModalComponent } from '../../components/create-confessi
 })
 export class FeedComponent {
   feedService = inject(FeedService);
+  profileService = inject(ProfileService);
   
   @ViewChild('createModal') createModal!: CreateConfessionModalComponent;
 
   openCreateModal() {
     this.createModal.open();
+  }
+
+  toggleTheme() {
+    const current = this.profileService.settings().theme;
+    this.profileService.updateSettings({ theme: current === 'light' ? 'dark' : 'light' });
   }
 }

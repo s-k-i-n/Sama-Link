@@ -1,0 +1,117 @@
+import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import prisma from '../lib/prisma';
+import { logger } from '../index';
+
+/**
+ * Inscription d'un nouvel utilisateur
+ */
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { email, password, username } = req.body;
+
+    // Vérification des champs requis
+    if (!email || !password || !username) {
+      return res.status(400).json({ message: 'Tous les champs sont requis (email, password, username).' });
+    }
+
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email ou nom d\'utilisateur déjà utilisé.' });
+    }
+
+    // Hashage du mot de passe
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    // Création de l'utilisateur en base de données
+    const user = await prisma.user.create({
+      data: {
+        email,
+        username,
+        passwordHash
+      }
+    });
+
+    logger.info(`Nouvel utilisateur inscrit : ${username} (${email})`);
+
+    // Génération du token JWT
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || 'secret_temporaire',
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      message: 'Compte créé avec succès.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username
+      }
+    });
+  } catch (error) {
+    logger.error('Erreur lors de l\'inscription :', error);
+    res.status(500).json({ message: 'Erreur interne du serveur lors de l\'inscription.' });
+  }
+};
+
+/**
+ * Connexion d'un utilisateur existant
+ */
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email et mot de passe requis.' });
+    }
+
+    // Recherche de l'utilisateur
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Identifiants invalides.' });
+    }
+
+    // Vérification du mot de passe
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Identifiants invalides.' });
+    }
+
+    // Génération du token JWT
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || 'secret_temporaire',
+      { expiresIn: '24h' }
+    );
+
+    logger.info(`Utilisateur connecté : ${user.username}`);
+
+    res.json({
+      message: 'Connexion réussie.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        isPremium: user.isPremium
+      }
+    });
+  } catch (error) {
+    logger.error('Erreur lors de la connexion :', error);
+    res.status(500).json({ message: 'Erreur interne du serveur lors de la connexion.' });
+  }
+};

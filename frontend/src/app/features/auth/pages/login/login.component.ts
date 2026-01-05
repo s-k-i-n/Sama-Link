@@ -86,13 +86,11 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
-      // Simulate API call for now (since backend isn't ready)
-      setTimeout(() => {
-        // Mock success
-        this.authService.login('mock-token', { email: this.loginForm.value.email });
-        this.isLoading.set(false);
-        this.router.navigate(['/onboarding']); // Redirect to onboarding for this Sprint flow
-      }, 1500);
+      // TODO: Connect to Real Backend
+      // For now, simulate success without delay for UI transition, but data won't persist
+      this.authService.login('mock-token', { email: this.loginForm.value.email });
+      this.isLoading.set(false);
+      this.router.navigate(['/onboarding']);
     } else {
       this.loginForm.markAllAsTouched();
     }
