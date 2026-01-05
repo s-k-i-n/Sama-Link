@@ -1,13 +1,15 @@
 import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
 import { Confession } from '../../../../core/models/confession.model';
 import { ModerationService } from '../../../../core/services/moderation.service';
+import { FeedService } from '../../services/feed.service';
 
 @Component({
   selector: 'app-confession-card',
   standalone: true,
-  imports: [CommonModule, SlCardComponent],
+  imports: [CommonModule, SlCardComponent, FormsModule],
   template: `
     <sl-card class="mb-4 hover:border-sage/30 transition-colors relative">
       <!-- Header -->
@@ -77,18 +79,31 @@ import { ModerationService } from '../../../../core/services/moderation.service'
          Signalement envoyé !
       </div>
 
-      <!-- Comments Section (Simple Expansion) -->
+      <!-- Comments Section -->
       <div *ngIf="showComments()" class="mt-4 pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
-         <div class="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 mb-2">
-            <strong>Utilisateur1:</strong> C'est vraiment touchant... courage ! ❤️
-         </div>
-         <div class="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 mb-3">
-             <strong>Anonyme:</strong> Je suis passé par là aussi.
+         <div *ngIf="isLoadingComments()" class="text-center py-2 text-slate-400 text-xs">Chargement...</div>
+         
+         <div *ngFor="let comment of comments()" class="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 mb-2">
+            <strong>{{ comment.authorAlias }}:</strong> {{ comment.content }}
          </div>
          
-         <div class="flex gap-2">
-            <input type="text" placeholder="Ajouter un commentaire..." class="flex-grow bg-white border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-sage">
-            <button class="text-sage font-medium text-sm hover:underline">Envoyer</button>
+         <div *ngIf="!isLoadingComments() && comments().length === 0" class="text-center py-2 text-slate-400 text-xs">Aucun commentaire pour le moment.</div>
+         
+         <div class="flex gap-2 mt-3">
+            <input 
+              type="text" 
+              [(ngModel)]="newCommentContent" 
+              (keyup.enter)="submitComment()"
+              placeholder="Ajouter un commentaire..." 
+              class="flex-grow bg-white border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-sage"
+            >
+            <button 
+              (click)="submitComment()"
+              [disabled]="!newCommentContent().trim()"
+              class="text-sage font-medium text-sm hover:underline disabled:opacity-50"
+            >
+              Envoyer
+            </button>
          </div>
       </div>
     </sl-card>
@@ -99,13 +114,46 @@ export class ConfessionCardComponent {
   @Output() like = new EventEmitter<string>();
 
   moderationService = inject(ModerationService);
+  feedService = inject(FeedService);
   
   isMenuOpen = signal(false);
   showReportToast = signal(false);
   showComments = signal(false);
+  
+  comments = signal<any[]>([]);
+  isLoadingComments = signal(false);
+  newCommentContent = signal('');
 
   toggleComments() {
     this.showComments.update(v => !v);
+    if (this.showComments() && this.comments().length === 0) {
+      this.loadComments();
+    }
+  }
+
+  loadComments() {
+    this.isLoadingComments.set(true);
+    this.feedService.getComments(this.confession.id).subscribe({
+      next: (data) => {
+        this.comments.set(data);
+        this.isLoadingComments.set(false);
+      },
+      error: () => this.isLoadingComments.set(false)
+    });
+  }
+
+  submitComment() {
+    const content = this.newCommentContent().trim();
+    if (!content) return;
+
+    this.feedService.addComment(this.confession.id, content).subscribe({
+      next: (res: any) => {
+        this.comments.update(list => [...list, res.comment]);
+        this.newCommentContent.set('');
+        // Incrémenter le compteur local (imparfait mais rapide pour l'UI)
+        this.confession.commentsCount++;
+      }
+    });
   }
 
   onLike() {
