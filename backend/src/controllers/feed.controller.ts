@@ -51,12 +51,17 @@ export const getConfessions = async (req: Request, res: Response) => {
     // Reformater pour le frontend
     const formatted = confessions.map(c => {
       try {
+        const imageUrl = c.imageUrl 
+          ? `${req.protocol}://${req.get('host')}/${c.imageUrl.replace(/\\/g, '/')}`
+          : null;
+
         return {
           id: c.id,
           content: c.content,
           createdAt: c.createdAt,
           location: c.location,
           authorId: c.authorId,
+          imageUrl: imageUrl,
           authorAlias: c.isAnonymous ? 'Anonyme' : (c.author?.username || 'Utilisateur inconnu'),
           likes: c._count.reactions,
           commentsCount: c._count.comments,
@@ -86,6 +91,7 @@ export const createConfession = async (req: Request, res: Response) => {
   try {
     const { content, location, isAnonymous } = req.body;
     const authorId = (req as any).userId;
+    const file = req.file;
 
     if (!content || !authorId) {
       return res.status(400).json({ message: 'Le contenu est requis.' });
@@ -95,8 +101,9 @@ export const createConfession = async (req: Request, res: Response) => {
       data: {
         content,
         location: location || 'Inconnu',
-        isAnonymous: isAnonymous ?? true,
-        authorId
+        isAnonymous: typeof isAnonymous === 'string' ? isAnonymous === 'true' : isAnonymous ?? true,
+        authorId,
+        imageUrl: file ? file.path : null
       },
       include: {
         author: { select: { username: true } }
@@ -104,6 +111,10 @@ export const createConfession = async (req: Request, res: Response) => {
     });
 
     logger.info(`Nouvelle confession créée par ${confession.author.username}`);
+
+    const fullImageUrl = confession.imageUrl 
+      ? `${req.protocol}://${req.get('host')}/${confession.imageUrl.replace(/\\/g, '/')}`
+      : null;
 
     res.status(201).json({
       message: 'Confession publiée !',
@@ -113,6 +124,7 @@ export const createConfession = async (req: Request, res: Response) => {
         createdAt: confession.createdAt,
         authorId: confession.authorId,
         authorAlias: confession.isAnonymous ? 'Anonyme' : confession.author.username,
+        imageUrl: fullImageUrl,
         likes: 0,
         commentsCount: 0
       }

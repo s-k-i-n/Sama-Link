@@ -8,5 +8,6 @@ export interface Confession {
   commentsCount: number;
   isLiked: boolean; // Computed state for current user
   location?: string;
+  imageUrl?: string;
   tags?: string[];
 }

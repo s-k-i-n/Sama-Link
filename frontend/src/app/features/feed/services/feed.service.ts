@@ -57,8 +57,16 @@ export class FeedService {
     });
   }
 
-  addConfession(content: string, location: string = 'Inconnu', isAnonymous: boolean = true) {
-    return this.http.post<any>(this.apiUrl, { content, location, isAnonymous }).pipe(
+  addConfession(content: string, location: string = 'Inconnu', isAnonymous: boolean = true, image?: File) {
+    const formData = new FormData();
+    formData.append('content', content);
+    formData.append('location', location);
+    formData.append('isAnonymous', String(isAnonymous));
+    if (image) {
+      formData.append('image', image);
+    }
+
+    return this.http.post<any>(this.apiUrl, formData).pipe(
       tap(() => this.loadConfessions())
     );
   }

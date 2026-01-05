@@ -62,10 +62,18 @@ import { AuthService } from '../../../../core/services/auth.service';
        </div>
       </div>
 
-      <!-- Content -->
-      <div *ngIf="!isEditing(); else editMode">
-        <p class="text-night text-lg leading-relaxed mb-4 whitespace-pre-wrap">{{ confession.content }}</p>
-      </div>
+        <!-- Content -->
+        <p *ngIf="!isEditing()" class="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-4 whitespace-pre-wrap">
+          {{ confession.content }}
+        </p>
+
+        <!-- Media / Photo -->
+        <div *ngIf="!isEditing() && confession.imageUrl" class="mb-4 -mx-2">
+          <img 
+            [src]="confession.imageUrl" 
+            class="w-full h-auto max-h-96 object-cover rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm"
+            [alt]="'Image de la confession ' + confession.id">
+        </div>
       
       <ng-template #editMode>
         <div class="mb-4">

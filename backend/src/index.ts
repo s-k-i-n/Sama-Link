@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import winston from "winston";
+import path from "path";
 
 // Chargement des variables d'environnement
 dotenv.config();
@@ -49,6 +50,7 @@ app.use(cors({
 })); // Gestion du CORS
 app.use(express.json()); // Parsing du JSON
 app.use(morgan("dev")); // Logging des requêtes HTTP
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'))); // Servir les fichiers téléversés
 
 // Import des routes
 import authRoutes from './routes/auth.routes';

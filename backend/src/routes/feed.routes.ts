@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getConfessions, createConfession, deleteConfession, updateConfession, deleteAllMyConfessions } from '../controllers/feed.controller';
 import { authenticate } from '../middleware/auth.middleware';
+import { upload } from '../middleware/upload.middleware';
 
 const router = Router();
 
@@ -11,10 +12,10 @@ const router = Router();
 router.get('/', getConfessions);
 
 /**
- * Route pour créer une confession (Protégée)
+ * Route pour créer une confession (Protégée, avec support photo)
  * POST /api/feed
  */
-router.post('/', authenticate, createConfession);
+router.post('/', authenticate, upload.single('image'), createConfession);
 
 /**
  * Route pour supprimer toutes ses propres confessions

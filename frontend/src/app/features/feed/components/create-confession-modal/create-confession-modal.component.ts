@@ -23,24 +23,53 @@ import { FeedService } from '../../services/feed.service';
             class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sage focus:border-sage resize-none"
             placeholder="Confessez-vous en toute liberté... (Anonymat garanti)"
           ></textarea>
-          <div class="flex justify-end mt-1">
-            <span class="text-xs text-slate-400" [ngClass]="{'text-red-500': charCount() > 500}">
-              {{ charCount() }}/500
-            </span>
+          
+          <!-- Image Preview -->
+          <div *ngIf="imagePreview()" class="mt-3 relative inline-block">
+            <img [src]="imagePreview()" class="h-32 rounded-lg object-cover border border-slate-200 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+            <button 
+              type="button" 
+              (click)="removeImage()" 
+              class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-md hover:bg-red-600 transition-colors">
+              ✕
+            </button>
           </div>
 
-          <div class="flex items-center gap-2 mb-2">
-             <input type="checkbox" formControlName="isAnonymous" id="anon" class="checkbox checkbox-sm checkbox-success">
-             <label for="anon" class="text-sm text-slate-600 cursor-pointer select-none">
-               Publier en anonyme 🕵️
-             </label>
+          <div class="flex justify-between items-center mt-2">
+            <!-- Add Image Button -->
+            <div class="flex items-center gap-2">
+              <button 
+                type="button" 
+                (click)="fileInput.click()"
+                class="p-2 text-slate-500 hover:text-sage hover:bg-sage/10 rounded-full transition-all flex items-center gap-2"
+                [title]="selectedFile() ? 'Changer l\\'image' : 'Ajouter une photo'">
+                <span class="text-xl">📷</span>
+                <span class="text-xs font-medium" *ngIf="!selectedFile()">Photo</span>
+              </button>
+              <input 
+                #fileInput 
+                type="file" 
+                (change)="onFileSelected($event)" 
+                accept="image/*" 
+                class="hidden">
+            </div>
+
+            <div class="flex items-center gap-2">
+               <input type="checkbox" formControlName="isAnonymous" id="anon" class="checkbox checkbox-xs checkbox-success">
+               <label for="anon" class="text-xs text-slate-500 cursor-pointer select-none">
+                 Anonyme 🕵️
+               </label>
+               <span class="text-[10px] text-slate-400 ml-2" [ngClass]="{'text-red-500': charCount > 500}">
+                 {{ charCount }}/500
+               </span>
+            </div>
           </div>
         </div>
 
         <div class="bg-slate-50 -mx-6 -mb-4 px-6 py-3 flex justify-end gap-2 border-t border-slate-100">
-          <sl-button type="button" variant="ghost" (click)="close()">Annuler</sl-button>
-          <sl-button type="submit" variant="primary" [disabled]="form.invalid || charCount() > 500 || isLoading()">
-            {{ isLoading() ? 'Publication...' : (form.get('isAnonymous')?.value ? 'Publier (Anonyme)' : 'Publier (Signé)') }}
+          <sl-button type="button" variant="ghost" size="sm" (click)="close()">Annuler</sl-button>
+          <sl-button type="submit" variant="primary" size="sm" [disabled]="form.invalid || charCount > 500 || isLoading()">
+            {{ isLoading() ? 'Publication...' : 'Publier' }}
           </sl-button>
         </div>
       </form>
@@ -53,19 +82,17 @@ export class CreateConfessionModalComponent {
 
   isOpen = signal(false);
   isLoading = signal(false);
+  selectedFile = signal<File | null>(null);
+  imagePreview = signal<string | null>(null);
+
   form = this.fb.group({
     content: ['', [Validators.required, Validators.maxLength(500)]],
     isAnonymous: [true]
   });
 
   get charCount() {
-    return  signal(this.form.get('content')?.value?.length || 0);
+    return this.form.get('content')?.value?.length || 0;
   }
-
-  // Monitor value changes for char count - actually let's use a cleaner signal way or just template getter
-  // For simplicity in this structure:
-  // We'll update a signal manually or rely on change detection. Since this is Angular 21 (hypothetically), 
-  // Reactive forms + signals integration might be better, but we'll stick to standard check.
   
   open() {
     this.isOpen.set(true);
@@ -73,7 +100,29 @@ export class CreateConfessionModalComponent {
 
   close() {
     this.isOpen.set(false);
-    this.form.reset();
+    this.removeImage();
+    this.form.reset({ isAnonymous: true });
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("L'image est trop volumineuse (max 5 Mo)");
+        return;
+      }
+      this.selectedFile.set(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.imagePreview.set(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeImage() {
+    this.selectedFile.set(null);
+    this.imagePreview.set(null);
   }
 
   submit() {
@@ -84,11 +133,11 @@ export class CreateConfessionModalComponent {
       this.feedService.addConfession(
         this.form.value.content || '', 
         location,
-        this.form.value.isAnonymous ?? true
+        this.form.value.isAnonymous ?? true,
+        this.selectedFile() || undefined
       ).subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.form.reset({ isAnonymous: true });
           this.close();
         },
         error: (err) => {
