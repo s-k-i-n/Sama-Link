@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../services/chat.service';
 import { ModerationService } from '../../../../core/services/moderation.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-chat',
@@ -61,15 +62,15 @@ import { ModerationService } from '../../../../core/services/moderation.service'
          <ng-container *ngFor="let msg of activeChat()?.messages">
            <!-- Date Separator (Optional simplified) -->
            
-           <div class="flex" [ngClass]="msg.senderId === 'me' ? 'justify-end' : 'justify-start'">
+           <div class="flex" [ngClass]="msg.senderId === authService.currentUser()?.id ? 'justify-end' : 'justify-start'">
               <div 
                 class="max-w-[75%] px-4 py-2 rounded-2xl shadow-sm text-sm relative group"
-                [ngClass]="msg.senderId === 'me' ? 'bg-sage text-white rounded-br-none' : 'bg-white text-slate-800 rounded-bl-none border border-slate-100'">
+                [ngClass]="msg.senderId === authService.currentUser()?.id ? 'bg-sage text-white rounded-br-none' : 'bg-white text-slate-800 rounded-bl-none border border-slate-100'">
                 {{ msg.content }}
                 
-                <div class="text-[10px] opacity-70 mt-1 text-right" [ngClass]="msg.senderId === 'me' ? 'text-white/80' : 'text-slate-400'">
+                <div class="text-[10px] opacity-70 mt-1 text-right" [ngClass]="msg.senderId === authService.currentUser()?.id ? 'text-white/80' : 'text-slate-400'">
                    {{ msg.timestamp | date:'shortTime' }}
-                   <span *ngIf="msg.senderId === 'me'">
+                   <span *ngIf="msg.senderId === authService.currentUser()?.id">
                      {{ msg.isRead ? '✓✓' : '✓' }}
                    </span>
                 </div>
@@ -106,6 +107,7 @@ import { ModerationService } from '../../../../core/services/moderation.service'
 })
 export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   chatService = inject(ChatService);
+  authService = inject(AuthService);
   private moderationService = inject(ModerationService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);

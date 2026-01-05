@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { StorageService } from './storage.service';
+import { ToastService } from './toast.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private storage = inject(StorageService);
   private router = inject(Router);
+  private toastService = inject(ToastService);
   private apiUrl = `${environment.apiUrl}/auth`;
   
   // Use Signals for state management as requested
@@ -38,13 +40,19 @@ export class AuthService {
 
   register(userData: any) {
     return this.http.post<any>(`${this.apiUrl}/register`, userData).pipe(
-      tap(res => this.setSession(res))
+      tap(res => {
+        this.setSession(res);
+        this.toastService.success('Compte créé avec succès ! Bienvenue.');
+      })
     );
   }
 
   login(credentials: any) {
     return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
-      tap(res => this.setSession(res))
+      tap(res => {
+        this.setSession(res);
+        this.toastService.success(`Heureux de vous revoir, ${res.user.username} !`);
+      })
     );
   }
 
@@ -66,6 +74,7 @@ export class AuthService {
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
     this.hasCompletedOnboarding.set(false);
+    this.toastService.info('Vous avez été déconnecté.');
     this.router.navigate(['/auth/login']);
   }
 }

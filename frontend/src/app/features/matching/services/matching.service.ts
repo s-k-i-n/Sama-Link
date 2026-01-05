@@ -1,83 +1,59 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { User, Match } from '../../../core/models/user.model';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { User } from '../../../core/models/user.model';
+import { ToastService } from '../../../core/services/toast.service';
+import { catchError, map, tap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MatchingService {
-  // Mock Data
+  private http = inject(HttpClient);
+  private toastService = inject(ToastService);
+  private apiUrl = `${environment.apiUrl}/matching`;
+
   private suggestionsSig = signal<User[]>([]);
-  private matchesSig = signal<Match[]>([]);
+  private isLoadingSig = signal(false);
   
   suggestions = computed(() => this.suggestionsSig());
-  matches = computed(() => this.matchesSig());
+  isLoading = computed(() => this.isLoadingSig());
 
   constructor() {
     this.loadSuggestions();
   }
 
   loadSuggestions() {
-    const MOCK_USERS: User[] = [
-      {
-        id: '1',
-        username: 'Aissatou',
-        age: 24,
-        gender: 'female',
-        location: 'Dakar, Plateau',
-        bio: "Passionnée de photographie et de jazz. Je cherche des discussions profondes, pas de superficiel.",
-        interests: ['Photo', 'Jazz', 'Voyage', 'Cuisine'],
-        compatibilityScore: 92,
-        distance: 3
+    this.isLoadingSig.set(true);
+    this.http.get<User[]>(`${this.apiUrl}/suggestions`).subscribe({
+      next: (data) => {
+        this.suggestionsSig.set(data);
+        this.isLoadingSig.set(false);
       },
-      {
-        id: '2',
-        username: 'Moussa',
-        age: 28,
-        gender: 'male',
-        location: 'Mermoz',
-        bio: "Entrepreneur dans la tech. J'aime le sport et les bons tiéboudienne.",
-        interests: ['Tech', 'Football', 'Business'],
-        compatibilityScore: 85,
-        distance: 5
-      },
-      {
-        id: '3',
-        username: 'Fatou',
-        age: 23,
-        gender: 'female',
-        location: 'Yoff',
-        bio: "Étudiante en médecine. Toujours souriante :)",
-        interests: ['Cinéma', 'Lecture', 'Plage'],
-        compatibilityScore: 78,
-        distance: 8
+      error: () => {
+        this.toastService.error('Erreur lors du chargement des suggestions.');
+        this.isLoadingSig.set(false);
       }
-    ];
-    this.suggestionsSig.set(MOCK_USERS);
+    });
   }
 
-  like(userId: string): boolean {
-    // Determine result (Mocking 30% chance of match)
-    const isMatch = Math.random() > 0.7;
-    
-    // Remove from suggestions
-    const likedUser = this.suggestionsSig().find(u => u.id === userId);
-    this.suggestionsSig.update(list => list.filter(u => u.id !== userId));
+  swipe(targetUserId: string, direction: 'like' | 'pass') {
+    // Optimistic removal from suggestions
+    const currentSuggestions = this.suggestionsSig();
+    this.suggestionsSig.set(currentSuggestions.filter(u => u.id !== targetUserId));
 
-    if (isMatch && likedUser) {
-      // Create new match
-      const newMatch: Match = {
-        id: Math.random().toString(36).substr(2, 9),
-        users: [likedUser, { id: 'me', username: 'Moi', age: 25, gender: 'male', location: 'Dakar', bio: '', interests: [] }], // Mock 'me'
-        createdAt: new Date(),
-        unreadCount: 0
-      };
-      this.matchesSig.update(list => [newMatch, ...list]);
-    }
-
-    return isMatch;
-  }
-
-  pass(userId: string) {
-    this.suggestionsSig.update(list => list.filter(u => u.id !== userId));
+    return this.http.post<any>(`${this.apiUrl}/swipe`, { targetUserId, direction }).pipe(
+      tap(res => {
+        if (res.isMatch) {
+          this.toastService.success("C'est un match ! Vous pouvez maintenant discuter.");
+        }
+      }),
+      catchError(err => {
+        // Rollback on error if necessary, or just show toast
+        this.toastService.error(err.error?.message || 'Erreur lors du swipe.');
+        return of(null);
+      })
+    );
   }
 }

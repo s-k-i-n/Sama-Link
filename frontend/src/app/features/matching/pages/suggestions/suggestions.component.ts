@@ -4,6 +4,7 @@ import { MatchingService } from '../../services/matching.service';
 import { SwipeCardComponent } from '../../components/swipe-card/swipe-card.component';
 import { MatchModalComponent } from '../../components/match-modal/match-modal.component';
 import { User } from '../../../../core/models/user.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-suggestions',
@@ -54,20 +55,24 @@ import { User } from '../../../../core/models/user.model';
 })
 export class SuggestionsComponent {
   matchingService = inject(MatchingService);
+  router = inject(Router);
   
   isMatchModalOpen = signal(false);
   matchedUser = signal<User | null>(null);
 
   onLike(user: User) {
-    const isMatch = this.matchingService.like(user.id);
-    if (isMatch) {
-      this.matchedUser.set(user);
-      this.isMatchModalOpen.set(true);
-    }
+    this.matchingService.swipe(user.id, 'like').subscribe({
+      next: (res) => {
+        if (res && res.isMatch) {
+          this.matchedUser.set(user);
+          this.isMatchModalOpen.set(true);
+        }
+      }
+    });
   }
 
   onPass(user: User) {
-    this.matchingService.pass(user.id);
+    this.matchingService.swipe(user.id, 'pass').subscribe();
   }
 
   closeMatchModal() {
@@ -77,7 +82,6 @@ export class SuggestionsComponent {
 
   goToChat() {
     this.closeMatchModal();
-    // Router navigate to chat
-    console.log('Navigate to chat');
+    this.router.navigate(['/messaging']);
   }
 }

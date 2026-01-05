@@ -9,6 +9,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import winston from "winston";
 import path from "path";
+import prisma from "./lib/prisma";
 
 // Chargement des variables d'environnement
 dotenv.config();
@@ -73,6 +74,8 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'))); // Ser
 import authRoutes from './routes/auth.routes';
 import feedRoutes from './routes/feed.routes';
 import interactionRoutes from './routes/interaction.routes';
+import matchingRoutes from './routes/matching.routes';
+import messagingRoutes from './routes/messaging.routes';
 
 // Utilisation des routes
 console.log("Enregistrement des routes...");
@@ -83,6 +86,10 @@ app.use('/api/feed', feedRoutes);
 console.log("Routes Feed enregistrées");
 app.use('/api/interactions', interactionRoutes);
 console.log("Routes Interactions enregistrées");
+app.use('/api/matching', matchingRoutes);
+console.log("Routes Matching enregistrées");
+app.use('/api/messaging', messagingRoutes);
+console.log("Routes Messaging enregistrées");
 
 // Route de base pour vérifier que le serveur tourne
 app.get("/", (req, res) => {
@@ -96,6 +103,53 @@ app.get("/", (req, res) => {
 // Gestion des connexions Socket.io
 io.on("connection", (socket) => {
   logger.info(`Nouvelle connexion Socket.io : ${socket.id}`);
+
+  // Rejoindre une conversation (room)
+  socket.on("join_conversation", (conversationId: string) => {
+    socket.join(conversationId);
+    logger.info(`Socket ${socket.id} a rejoint la conversation ${conversationId}`);
+  });
+
+  // Envoyer un message
+  socket.on("send_message", async (data: { 
+    conversationId: string, 
+    senderId: string, 
+    receiverId: string, 
+    content: string 
+  }) => {
+    try {
+      const { conversationId, senderId, receiverId, content } = data;
+
+      // Sauvegarder dans la DB
+      const message = await prisma.message.create({
+        data: {
+          conversationId,
+          senderId,
+          receiverId,
+          content
+        },
+        include: {
+          sender: { select: { username: true } }
+        }
+      });
+
+      // Emettre à tous les membres de la room (y compris l'envoyeur pour confirmation si nécessaire, 
+      // ou on peut utiliser broadcast pour les autres)
+      io.to(conversationId).emit("new_message", message);
+      
+      logger.info(`Message envoyé dans ${conversationId} par ${senderId}`);
+    } catch (err) {
+      logger.error('Erreur Socket send_message:', err);
+    }
+  });
+
+  // Indicateur de saisie
+  socket.on("typing", (data: { conversationId: string, username: string, isTyping: boolean }) => {
+    socket.to(data.conversationId).emit("user_typing", {
+      username: data.username,
+      isTyping: data.isTyping
+    });
+  });
 
   socket.on("disconnect", () => {
     logger.info(`Utilisateur déconnecté : ${socket.id}`);

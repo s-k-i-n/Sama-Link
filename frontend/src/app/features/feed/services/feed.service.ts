@@ -4,6 +4,7 @@ import { tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Confession } from '../../../core/models/confession.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class FeedService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
   private apiUrl = `${environment.apiUrl}/feed`;
   private interactionUrl = `${environment.apiUrl}/interactions`;
 
@@ -37,7 +39,6 @@ export class FeedService {
     this.errorSig.set(null);
     const params: any = { filter: this.filterSig() };
     
-    // Si c'est le filtre 'mine', on passe le userId
     if (params.filter === 'mine') {
       const user = this.authService.currentUser();
       if (user) params.userId = user.id;
@@ -45,13 +46,13 @@ export class FeedService {
 
     this.http.get<Confession[]>(this.apiUrl, { params }).subscribe({
       next: (data) => {
-        console.log('Confessions reçues:', data);
-        this.confessionsSig.set(data); // Corrected to confessionsSig
+        this.confessionsSig.set(data);
         this.isLoading.set(false);
       },
-      error: (err) => { 
-        console.error('Erreur chargement confessions', err);
-        this.errorSig.set(err.error?.message || 'Erreur lors du chargement des confessions. Vérifiez votre connexion.');
+      error: (err: any) => { 
+        const msg = err.error?.message || 'Erreur lors du chargement des confessions.';
+        this.errorSig.set(msg);
+        this.toastService.error(msg);
         this.isLoading.set(false);
       }
     });
@@ -67,7 +68,10 @@ export class FeedService {
     }
 
     return this.http.post<any>(this.apiUrl, formData).pipe(
-      tap(() => this.loadConfessions())
+      tap(() => {
+        this.toastService.success('Votre confession a été publiée !');
+        this.loadConfessions();
+      })
     );
   }
 
@@ -99,7 +103,8 @@ export class FeedService {
             likes: res.isLiked ? c.likes + 1 : c.likes - 1 
           } : c)
         );
-      }
+      },
+      error: () => this.toastService.error('Impossible d\'interagir pour le moment.')
     });
   }
 

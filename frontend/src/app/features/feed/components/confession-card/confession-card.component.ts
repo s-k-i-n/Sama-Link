@@ -6,6 +6,8 @@ import { Confession } from '../../../../core/models/confession.model';
 import { ModerationService } from '../../../../core/services/moderation.service';
 import { FeedService } from '../../services/feed.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { TimeService } from '../../../../core/services/time.service';
 
 @Component({
   selector: 'app-confession-card',
@@ -118,11 +120,6 @@ import { AuthService } from '../../../../core/services/auth.service';
           Modifiable pendant encore {{ editTimeRemaining() }}s
         </div>
       </div>
-      
-      <!-- Report Success Toast Mock (Inline for MVP) -->
-      <div *ngIf="showReportToast()" class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-night text-white text-xs px-3 py-1 rounded-full shadow-lg animate-in fade-in slide-in-from-top-2">
-         Signalement envoyé !
-      </div>
 
       <!-- Comments Section -->
       <div *ngIf="showComments()" class="mt-4 pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
@@ -162,9 +159,10 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
   moderationService = inject(ModerationService);
   feedService = inject(FeedService);
   authService = inject(AuthService);
+  toastService = inject(ToastService);
+  timeService = inject(TimeService);
   
   isMenuOpen = signal(false);
-  showReportToast = signal(false);
   showComments = signal(false);
   
   comments = signal<any[]>([]);
@@ -174,8 +172,6 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
   // Edit / Delete Logic
   isEditing = signal(false);
   editedContent = signal('');
-  currentTime = signal(new Date());
-  private timer: any;
 
   isOwner = computed(() => {
     const user = this.authService.currentUser();
@@ -185,30 +181,24 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
   canEdit = computed(() => {
     if (!this.confession.createdAt) return false;
     const createdAt = new Date(this.confession.createdAt).getTime();
-    const now = this.currentTime().getTime();
+    const now = this.timeService.now().getTime();
     const diff = now - createdAt;
     return diff < 2 * 60 * 1000;
   });
 
   editTimeRemaining = computed(() => {
     const createdAt = new Date(this.confession.createdAt).getTime();
-    const now = this.currentTime().getTime();
+    const now = this.timeService.now().getTime();
     const remaining = Math.max(0, Math.floor((120000 - (now - createdAt)) / 1000));
     return remaining;
   });
 
   ngOnInit() {
-    // Update timer every second to refresh "canEdit" and "editTimeRemaining"
-    this.timer = setInterval(() => {
-      this.currentTime.set(new Date());
-      if (!this.canEdit() && this.isEditing()) {
-        this.cancelEdit();
-      }
-    }, 1000);
+    // Shared timer logic via TimeService
   }
 
   ngOnDestroy() {
-    if (this.timer) clearInterval(this.timer);
+    // No local timer to clean up
   }
 
   toggleComments() {
@@ -253,14 +243,16 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
   report() {
     this.moderationService.reportContent(this.confession.id, 'confession', 'Contenu inapproprié');
     this.isMenuOpen.set(false);
-    this.showReportToast.set(true);
-    setTimeout(() => this.showReportToast.set(false), 3000);
+    this.toastService.success('Le contenu a été signalé. Merci !');
   }
 
   // Action methods
   onDelete() {
     if (confirm('Voulez-vous vraiment supprimer cette confession ?')) {
-      this.feedService.deleteConfession(this.confession.id).subscribe();
+      this.feedService.deleteConfession(this.confession.id).subscribe({
+        next: () => this.toastService.success('Confession supprimée.'),
+        error: (err: any) => this.toastService.error(err.error?.message || 'Erreur lors de la suppression')
+      });
     }
     this.isMenuOpen.set(false);
   }
@@ -286,9 +278,10 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
       next: () => {
         this.confession.content = newContent;
         this.isEditing.set(false);
+        this.toastService.success('Modifications enregistrées.');
       },
-      error: (err) => {
-        alert(err.error?.message || 'Erreur lors de la modification');
+      error: (err: any) => {
+        this.toastService.error(err.error?.message || 'Erreur lors de la modification');
         this.isEditing.set(false);
       }
     });

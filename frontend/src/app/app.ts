@@ -1,10 +1,15 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { SlToastContainerComponent } from './shared/ui/sl-toast/sl-toast-container';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
+  standalone: true,
+  imports: [RouterOutlet, SlToastContainerComponent],
+  template: `
+    <router-outlet></router-outlet>
+    <sl-toast-container></sl-toast-container>
+  `,
   styleUrl: './app.css',
   // Host binding for dark mode could be done here but service places it on documentElement which is better for Tailwind 'class' mode.
   // We'll just ensure the router outlet is wrapped if we want global background control, 
