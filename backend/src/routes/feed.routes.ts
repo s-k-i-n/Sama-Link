@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getConfessions, createConfession } from '../controllers/feed.controller';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -10,10 +11,10 @@ const router = Router();
 router.get('/', getConfessions);
 
 /**
- * Route pour créer une confession
+ * Route pour créer une confession (Protégée)
  * POST /api/feed
  */
-router.post('/', createConfession);
+router.post('/', authenticate, createConfession);
 
 export default router;
 

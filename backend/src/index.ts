@@ -49,10 +49,12 @@ app.use(morgan("dev")); // Logging des requêtes HTTP
 // Import des routes
 import authRoutes from './routes/auth.routes';
 import feedRoutes from './routes/feed.routes';
+import interactionRoutes from './routes/interaction.routes';
 
 // Utilisation des routes
 app.use('/api/auth', authRoutes);
 app.use('/api/feed', feedRoutes);
+app.use('/api/interactions', interactionRoutes);
 
 // Route de base pour vérifier que le serveur tourne
 app.get("/", (req, res) => {

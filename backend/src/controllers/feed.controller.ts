@@ -67,10 +67,11 @@ export const getConfessions = async (req: Request, res: Response) => {
  */
 export const createConfession = async (req: Request, res: Response) => {
   try {
-    const { content, location, isAnonymous, authorId } = req.body;
+    const { content, location, isAnonymous } = req.body;
+    const authorId = (req as any).userId;
 
     if (!content || !authorId) {
-      return res.status(400).json({ message: 'Le contenu et l\'ID de l\'auteur sont requis.' });
+      return res.status(400).json({ message: 'Le contenu est requis.' });
     }
 
     const confession = await prisma.confession.create({
