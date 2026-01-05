@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import winston from "winston";
@@ -50,6 +52,21 @@ app.use(cors({
 })); // Gestion du CORS
 app.use(express.json()); // Parsing du JSON
 app.use(morgan("dev")); // Logging des requêtes HTTP
+app.use(compression()); // Compression Gzip
+
+// Rate Limiting (Protection contre brute-force et DDoS)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limite chaque IP à 100 requêtes par fenêtre
+  message: { message: "Trop de requêtes, veuillez réessayer plus tard." }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 heure
+  max: 10, // Limite chaque IP à 10 tentatives de connexion par heure
+  message: { message: "Trop de tentatives de connexion, réessayez dans une heure." }
+});
+
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'))); // Servir les fichiers téléversés
 
 // Import des routes
@@ -59,7 +76,8 @@ import interactionRoutes from './routes/interaction.routes';
 
 // Utilisation des routes
 console.log("Enregistrement des routes...");
-app.use('/api/auth', authRoutes);
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter, authRoutes);
 console.log("Routes Auth enregistrées");
 app.use('/api/feed', feedRoutes);
 console.log("Routes Feed enregistrées");

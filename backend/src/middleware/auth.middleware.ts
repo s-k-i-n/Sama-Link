@@ -18,11 +18,15 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 
   const token = authHeader.split(' ')[1];
-
   try {
+    if (!process.env.JWT_SECRET) {
+      logger.error('JWT_SECRET manquant dans les variables d\'environnement');
+      return res.status(500).json({ message: 'Erreur de configuration serveur.' });
+    }
+
     const decoded = jwt.verify(
       token, 
-      process.env.JWT_SECRET || 'secret_temporaire'
+      process.env.JWT_SECRET
     ) as TokenPayload;
 
     console.log('Token décodé pour:', decoded.userId);

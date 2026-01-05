@@ -1,13 +1,23 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { logger } from '../index';
+import { createConfessionSchema, updateConfessionSchema, getConfessionsQuerySchema } from '../schemas/feed.schema';
 
 /**
  * Récupérer la liste des confessions avec filtres
  */
 export const getConfessions = async (req: Request, res: Response) => {
   try {
-    const { filter } = req.query;
+    // Validation de la query avec Zod
+    const queryValidation = getConfessionsQuerySchema.safeParse(req.query);
+    if (!queryValidation.success) {
+      return res.status(400).json({ 
+        message: "Paramètres de recherche invalides.", 
+        details: queryValidation.error.issues 
+      });
+    }
+
+    const { filter, page = 1, limit = 20, userId: queryUserId } = queryValidation.data;
     
     // Logique de tri/filtrage
     let orderBy: any = { createdAt: 'desc' };
@@ -23,12 +33,9 @@ export const getConfessions = async (req: Request, res: Response) => {
         where = { location: 'Dakar' }; 
         break;
       case 'mine':
-        console.log('Filtre "mine" détecté. Query:', req.query);
-        // On récupère le userId de la query (depuis FeedService)
-        const userId = req.query?.userId as string;
+        const userId = queryUserId || (req as any).userId; // On peut prendre de la query ou du token
         if (userId) {
           where = { authorId: userId };
-          console.log('Filtrage par authorId:', userId);
         } else {
           console.warn('Filtre "mine" demandé mais aucun userId fourni.');
         }
@@ -38,6 +45,8 @@ export const getConfessions = async (req: Request, res: Response) => {
     const confessions = await prisma.confession.findMany({
       where,
       orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
       include: {
         author: {
           select: { username: true, avatarUrl: true }
@@ -89,12 +98,18 @@ export const getConfessions = async (req: Request, res: Response) => {
  */
 export const createConfession = async (req: Request, res: Response) => {
   try {
-    const { content, location, isAnonymous } = req.body;
+    // Validation Zod
+    const validation = createConfessionSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ message: validation.error.issues[0].message });
+    }
+
+    const { content, location, isAnonymous } = validation.data;
     const authorId = (req as any).userId;
     const file = req.file;
 
-    if (!content || !authorId) {
-      return res.status(400).json({ message: 'Le contenu est requis.' });
+    if (!authorId) {
+      return res.status(401).json({ message: 'Non authentifié.' });
     }
 
     const confession = await prisma.confession.create({
@@ -174,8 +189,15 @@ export const deleteConfession = async (req: Request, res: Response) => {
 export const updateConfession = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { content } = req.body;
     const userId = (req as any).userId;
+
+    // Validation Zod
+    const validation = updateConfessionSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ message: validation.error.issues[0].message });
+    }
+
+    const { content } = validation.data;
     console.log(`Tentative de modification: ID=${id}, UserID=${userId}`);
 
     const confession = await prisma.confession.findUnique({

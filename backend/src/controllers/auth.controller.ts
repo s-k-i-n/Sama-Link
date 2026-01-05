@@ -3,18 +3,23 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
 import { logger } from '../index';
+import { registerSchema, loginSchema } from '../schemas/auth.schema';
 
 /**
  * Inscription d'un nouvel utilisateur
  */
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, username } = req.body;
-
-    // Vérification des champs requis
-    if (!email || !password || !username) {
-      return res.status(400).json({ message: 'Tous les champs sont requis (email, password, username).' });
+    // Validation avec Zod
+    const validation = registerSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ 
+        message: validation.error.issues[0].message,
+        details: validation.error.issues 
+      });
     }
+
+    const { email, password, username } = validation.data;
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findFirst({
@@ -69,11 +74,13 @@ export const register = async (req: Request, res: Response) => {
  */
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email et mot de passe requis.' });
+    // Validation avec Zod
+    const validation = loginSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ message: validation.error.issues[0].message });
     }
+
+    const { email, password } = validation.data;
 
     // Recherche de l'utilisateur
     const user = await prisma.user.findUnique({
