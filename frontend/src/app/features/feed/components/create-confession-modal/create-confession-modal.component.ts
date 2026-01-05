@@ -78,10 +78,13 @@ export class CreateConfessionModalComponent {
 
   submit() {
     if (this.form.valid) {
+      // Pour l'instant on garde Dakar par défaut ou on pourrait utiliser la géolocalisation
+      const location = 'Dakar'; 
+      
       this.feedService.addConfession(
         this.form.value.content || '', 
-        'Dakar', // Location (mock)
-        this.form.value.isAnonymous || false
+        location,
+        this.form.value.isAnonymous ?? true
       );
       this.close();
     }

@@ -86,11 +86,17 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
-      // TODO: Connect to Real Backend
-      // For now, simulate success without delay for UI transition, but data won't persist
-      this.authService.login('mock-token', { email: this.loginForm.value.email });
-      this.isLoading.set(false);
-      this.router.navigate(['/onboarding']);
+      
+      this.authService.login(this.loginForm.value).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.router.navigate(['/feed']); // Directement au feed si déjà en règle
+        },
+        error: (err) => {
+          this.isLoading.set(false);
+          alert(err.error?.message || 'Erreur lors de la connexion');
+        }
+      });
     } else {
       this.loginForm.markAllAsTouched();
     }
