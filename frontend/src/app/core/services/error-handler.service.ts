@@ -1,5 +1,4 @@
 import { Injectable, ErrorHandler, Injector } from '@angular/core';
-import { SlToastComponent } from '../../shared/ui/sl-toast/sl-toast'; // We might not need this if we just log
 // Actually, global error handler shouldn't depend on UI components directly to avoid circular deps often
 // We'll just log to console and potentially analytics
 

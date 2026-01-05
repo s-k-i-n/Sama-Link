@@ -41,7 +41,11 @@ export class FeedService {
     this.confessionsSig.set(MOCK_DATA);
   }
 
-  addConfession(content: string, location: string = 'Inconnu') {
+  addConfession(content: string, location: string = 'Inconnu', isAnonymous: boolean = true) {
+    // Determine alias based on anonymity (in real app, backend handles this based on user session)
+    // Here we simulate passing the alias if not anonymous
+    const authorAlias = isAnonymous ? 'Anonyme' : 'Moi (Pseudo)'; 
+
     const newConfession: Confession = {
       id: Math.random().toString(36).substr(2, 9),
       content,
@@ -49,7 +53,8 @@ export class FeedService {
       likes: 0,
       commentsCount: 0,
       isLiked: false,
-      location
+      location,
+      authorAlias 
     };
     
     this.confessionsSig.update(list => [newConfession, ...list]);

@@ -75,4 +75,8 @@ export class SettingsComponent {
   changePrivacy(event: any) {
     this.profileService.updateSettings({ privacy: event.target.value });
   }
+
+  changeTheme(theme: string) {
+    this.profileService.updateSettings({ theme });
+  }
 }

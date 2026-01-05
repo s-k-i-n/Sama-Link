@@ -28,12 +28,19 @@ import { FeedService } from '../../services/feed.service';
               {{ charCount() }}/500
             </span>
           </div>
+
+          <div class="flex items-center gap-2 mb-2">
+             <input type="checkbox" formControlName="isAnonymous" id="anon" class="checkbox checkbox-sm checkbox-success">
+             <label for="anon" class="text-sm text-slate-600 cursor-pointer select-none">
+               Publier en anonyme 🕵️
+             </label>
+          </div>
         </div>
 
         <div class="bg-slate-50 -mx-6 -mb-4 px-6 py-3 flex justify-end gap-2 border-t border-slate-100">
           <sl-button type="button" variant="ghost" (click)="close()">Annuler</sl-button>
           <sl-button type="submit" variant="primary" [disabled]="form.invalid || charCount() > 500">
-            Publier anonymement
+            {{ form.get('isAnonymous')?.value ? 'Publier (Anonyme)' : 'Publier (Signé)' }}
           </sl-button>
         </div>
       </form>
@@ -47,7 +54,8 @@ export class CreateConfessionModalComponent {
   isOpen = signal(false);
   
   form = this.fb.group({
-    content: ['', [Validators.required, Validators.maxLength(500)]]
+    content: ['', [Validators.required, Validators.maxLength(500)]],
+    isAnonymous: [true]
   });
 
   get charCount() {
@@ -70,7 +78,11 @@ export class CreateConfessionModalComponent {
 
   submit() {
     if (this.form.valid) {
-      this.feedService.addConfession(this.form.value.content || '');
+      this.feedService.addConfession(
+        this.form.value.content || '', 
+        'Dakar', // Location (mock)
+        this.form.value.isAnonymous || false
+      );
       this.close();
     }
   }
