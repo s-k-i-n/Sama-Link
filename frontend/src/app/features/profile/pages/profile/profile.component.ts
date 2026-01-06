@@ -24,7 +24,7 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
          <div class="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
             <div class="relative group cursor-pointer">
                <div class="w-32 h-32 rounded-full border-4 border-ivory overflow-hidden bg-white shadow-lg">
-                  <img *ngIf="user().profilePhotoUrl; else noPhoto" [src]="user().profilePhotoUrl" loading="lazy" [alt]="'Photo de profil de ' + user().username" class="w-full h-full object-cover">
+                  <img *ngIf="user().avatarUrl; else noPhoto" [src]="user().avatarUrl" loading="lazy" [alt]="'Photo de profil de ' + user().username" class="w-full h-full object-cover">
                   <ng-template #noPhoto>
                      <div class="w-full h-full flex items-center justify-center bg-slate-200 text-4xl">👤</div>
                   </ng-template>
@@ -285,7 +285,7 @@ export class ProfileComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        this.profileService.updateProfile({ profilePhotoUrl: result });
+        this.profileService.updateProfile({ avatarUrl: result });
       };
       reader.readAsDataURL(file);
     }

@@ -27,7 +27,11 @@ export class ProfileService {
       id: '',
       username: 'Invité',
       isPremium: false,
-      interests: []
+      interests: [],
+      gender: 'other',
+      location: '',
+      bio: '',
+      photos: []
     } as User;
   });
 

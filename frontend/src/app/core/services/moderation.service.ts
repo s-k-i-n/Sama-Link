@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
+import { of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -25,5 +26,10 @@ export class ModerationService {
 
   reportUser(reportedId: string, reason: string) {
     return this.http.post(`${this.apiUrl}/report`, { reportedId, reason });
+  }
+
+  reportContent(contentId: string, type: string, reason: string) {
+     // Mock for now as backend only supports User reporting
+     return of(true);
   }
 }

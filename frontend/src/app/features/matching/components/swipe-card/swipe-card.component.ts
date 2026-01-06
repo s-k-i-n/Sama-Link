@@ -10,8 +10,8 @@ import { User } from '../../../../core/models/user.model';
     <div class="relative w-full max-w-sm mx-auto h-[600px] rounded-2xl overflow-hidden shadow-xl bg-white border border-slate-100 flex flex-col">
       <!-- Photo Area (Mocked with color gradient for now) -->
       <div class="h-3/5 bg-gradient-to-br from-slate-200 to-slate-300 relative">
-         <div *ngIf="user.profilePhotoUrl; else placeholder" class="w-full h-full">
-            <img [src]="user.profilePhotoUrl" class="w-full h-full object-cover" alt="Profile of {{ user.username }}">
+         <div *ngIf="user.avatarUrl; else placeholder" class="w-full h-full">
+            <img [src]="user.avatarUrl" class="w-full h-full object-cover" alt="Profile of {{ user.username }}">
          </div>
          <ng-template #placeholder>
             <div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">

@@ -6,6 +6,6 @@ import { Component } from '@angular/core';
   templateUrl: './premium.html',
   styleUrl: './premium.css',
 })
-export class Premium {
+export class PremiumComponent {
 
 }

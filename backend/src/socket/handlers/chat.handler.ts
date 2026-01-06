@@ -25,7 +25,13 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
     metadata?: any
   }) => {
     try {
-      const message = await messagingService.saveMessage(data);
+      const message = await messagingService.saveMessage(
+        data.conversationId,
+        data.senderId,
+        data.content,
+        data.type as any,
+        data.metadata
+      );
 
       // Emettre à tous les membres de la room
       io.to(data.conversationId).emit("new_message", message);

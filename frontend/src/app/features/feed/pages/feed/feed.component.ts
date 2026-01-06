@@ -14,7 +14,7 @@ import { Meta, Title } from '@angular/platform-browser';
   standalone: true,
   imports: [CommonModule, ConfessionCardComponent, CreateConfessionModalComponent, RouterLink],
   template: `
-    <div class="min-h-screen bg-ivory dark:bg-night pb-20 transition-colors duration-300">
+    <div class="min-h-screen bg-ivory dark:bg-night transition-colors duration-300">
       <!-- Top Bar -->
       <div class="sticky top-0 z-30 bg-white/80 dark:bg-night/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div class="container mx-auto max-w-2xl px-4 py-3 flex justify-between items-center">
