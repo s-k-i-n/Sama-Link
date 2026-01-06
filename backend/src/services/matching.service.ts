@@ -10,25 +10,27 @@ export class MatchingService {
   async getSuggestions(userId: string, limit: number = 20) {
     // 1. Récupérer les préférences de l'utilisateur ou valeurs par défaut
     const userPrefs = await prisma.userPreferences.findUnique({ 
-      where: { userId } 
-    }) || { minAge: 18, maxAge: 99, genderPreference: null, maxDistance: 50 };
+      where: { userId },
+      include: { user: { include: { interests: { include: { interest: true } } } } } // Get user interests for scoring
+    }) as any;
+
+    const defaultPrefs = { minAge: 18, maxAge: 99, genderPreference: null, maxDistance: 50 };
+    const prefs = userPrefs || defaultPrefs;
+    const myInterests = userPrefs?.user?.interests?.map((ui: any) => ui.interest.name) || [];
 
     // 2. Calculer les dates de naissance min/max pour le filtre d'âge
     const today = new Date();
-    // Age min 18 => né avant aujourd'hui - 18 ans
-    const maxBirthDate = new Date(today.getFullYear() - userPrefs.minAge, today.getMonth(), today.getDate());
-    // Age max 99 => né après aujourd'hui - 99 ans - 1 an (pour inclure toute l'année)
-    const minBirthDate = new Date(today.getFullYear() - userPrefs.maxAge - 1, today.getMonth(), today.getDate());
+    const maxBirthDate = new Date(today.getFullYear() - prefs.minAge, today.getMonth(), today.getDate());
+    const minBirthDate = new Date(today.getFullYear() - prefs.maxAge - 1, today.getMonth(), today.getDate());
 
-    // 3. Récupérer les IDs des utilisateurs déjà swipés
+    // 3. Récupérer les IDs des utilisateurs déjà swipés (sauf si rewindés récemment?)
     const swipedUserIds = await prisma.match.findMany({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
+        status: { not: 'rewinded' } // Exclude rewinded matches so they can appear again if we delete them? 
+        // Logic: if rewinded, we usually delete the match record. So this check is fine.
       },
-      select: {
-        userAId: true,
-        userBId: true,
-      },
+      select: { userAId: true, userBId: true },
     });
 
     const excludedIds = new Set<string>();
@@ -42,33 +44,48 @@ export class MatchingService {
       id: { notIn: Array.from(excludedIds) },
     };
 
-    // Filtre Age et Genre
-    if (userPrefs.genderPreference && userPrefs.genderPreference !== 'all') {
-      whereClause.gender = userPrefs.genderPreference;
+    if (prefs.genderPreference && prefs.genderPreference !== 'all') {
+      whereClause.gender = prefs.genderPreference;
     }
 
     // Récupérer les candidats
-    const suggestions = await prisma.user.findMany({
+    const candidates = await prisma.user.findMany({
       where: whereClause,
-      take: limit,
-      orderBy: { updatedAt: "desc" }, // Ou un algo de score plus tard
-      select: {
-        id: true,
-        username: true,
-        bio: true,
-        location: true,
-        avatarUrl: true,
-        birthDate: true,
-        gender: true,
-      },
+      take: limit * 2, // Fetch more to filter/sort
+      include: { interests: { include: { interest: true } } }, // Include interests for scoring
     });
 
-    // Filtrage post-query pour l'âge (plus sûr si birthDate est null)
-    return suggestions.filter(user => {
-      if (!user.birthDate) return true; // On garde ceux sans date pour l'instant
-      const age = this.calculateAge(user.birthDate);
-      return age >= userPrefs.minAge && age <= userPrefs.maxAge;
-    });
+    // 5. Filtrage et Scoring
+    const scoredCandidates = candidates.map(candidate => {
+       // Filter Age
+       if (candidate.birthDate) {
+           const age = this.calculateAge(candidate.birthDate);
+           if (age < prefs.minAge || age > prefs.maxAge) return null;
+       }
+
+       // Score Calculation
+       let score = 0;
+       
+       // Interest Overlap
+       const candidateInterests = candidate.interests.map(ui => ui.interest.name);
+       const commonInterests = candidateInterests.filter(i => myInterests.includes(i)).length;
+       score += commonInterests * 5; // 5 points per common interest
+
+       // Distance (Mocked for now as we don't have Geo queries yet)
+       // if (distance < prefs.maxDistance) score += (prefs.maxDistance - distance);
+
+       // Recency Bonus
+       const daysSinceLogin = (new Date().getTime() - candidate.updatedAt.getTime()) / (1000 * 3600 * 24);
+       if (daysSinceLogin < 2) score += 10;
+       if (daysSinceLogin < 7) score += 5;
+
+       return { ...candidate, score, commonInterestsCount: commonInterests };
+    }).filter(c => c !== null);
+
+    // Sort by score desc
+    scoredCandidates.sort((a: any, b: any) => b.score - a.score);
+
+    return scoredCandidates.slice(0, limit);
   }
 
   private calculateAge(birthDate: Date): number {
@@ -82,80 +99,112 @@ export class MatchingService {
   }
 
   /**
-   * Gère le swipe (Like/Pass)
+   * Gère le swipe (Like/Pass/SuperLike)
    */
-  async handleSwipe(userId: string, targetUserId: string, direction: "like" | "pass") {
-    if (userId === targetUserId) {
-      throw new Error("Vous ne pouvez pas vous swiper vous-même.");
+  async handleSwipe(userId: string, targetUserId: string, direction: "like" | "pass" | "superlike") {
+    if (userId === targetUserId) throw new Error("Vous ne pouvez pas vous swiper vous-même.");
+
+    // Check Super Like Limits
+    if (direction === 'superlike') {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const canSuperLike = await this.checkSuperLikeLimit(user);
+        if (!canSuperLike) {
+            throw new Error("Limite de Super Likes atteinte pour aujourd'hui.");
+        }
+        // Deduct/Track use
+        await prisma.user.update({
+            where: { id: userId },
+            data: { lastSuperLikeAt: new Date() }
+        });
     }
+
+    const isSuperLike = direction === 'superlike';
+    const status = direction === 'pass' ? 'passed' : 'pending';
 
     if (direction === "pass") {
       return prisma.match.create({
-        data: {
-          userAId: userId,
-          userBId: targetUserId,
-          status: "passed",
-        },
+        data: { userAId: userId, userBId: targetUserId, status: "passed" },
       });
     }
 
-    // Si 'like', vérifier la réciprocité
+    // Check Reciprocity
     const existingInterest = await prisma.match.findFirst({
       where: {
         userAId: targetUserId,
         userBId: userId,
-        status: "pending",
+        status: { in: ['pending', 'matched'] } // Check if they liked us
       },
     });
 
     if (existingInterest) {
-      // C'est un MATCH !
+      // MATCH !
       const match = await prisma.match.update({
         where: { id: existingInterest.id },
-        data: { status: "matched" },
+        data: { 
+            status: "matched",
+            isSuperLike: existingInterest.isSuperLike || isSuperLike 
+        },
       });
-
-      return { isMatch: true, matchId: match.id };
+      return { isMatch: true, matchId: match.id, superLike: match.isSuperLike };
     }
 
-    // Premier like
+    // Create Match Request
     await prisma.match.create({
       data: {
         userAId: userId,
         userBId: targetUserId,
         status: "pending",
+        isSuperLike
       },
     });
 
     return { isMatch: false };
   }
 
-  /**
-   * Met à jour les préférences de matching de l'utilisateur
-   */
-  async updatePreferences(userId: string, preferences: { 
-    minAge?: number; 
-    maxAge?: number; 
-    genderPreference?: string;
-    maxDistance?: number;
-  }) {
-    return prisma.userPreferences.upsert({
-      where: { userId },
-      update: preferences,
-      create: {
-        userId,
-        ...preferences
-      }
-    });
+  private async checkSuperLikeLimit(user: any): Promise<boolean> {
+      if (user.isPremium) return true; // Unlimited or higher limit for premium
+      
+      if (!user.lastSuperLikeAt) return true;
+
+      const today = new Date();
+      const last = new Date(user.lastSuperLikeAt);
+      
+      // Reset at midnight or 24h rolling? Let's do same day check
+      return last.getDate() !== today.getDate() || last.getMonth() !== today.getMonth() || last.getFullYear() !== today.getFullYear();
   }
 
   /**
-   * Récupère les préférences de l'utilisateur
+   * Rewind last action (Premium feature usually)
    */
-  async getPreferences(userId: string) {
-    return prisma.userPreferences.findUnique({
-      where: { userId }
+  async rewindLastSwipe(userId: string) {
+      // Find last action where user was initiator (A)
+      const lastMatch = await prisma.match.findFirst({
+          where: { userAId: userId },
+          orderBy: { createdAt: 'desc' }
+      });
+
+      if (!lastMatch) throw new Error("Aucune action à annuler.");
+      
+      // Allow rewind only if not matched yet? Or undo match too?
+      // Usually we only undo the swipe action. If it caused a match, we dissolve it.
+      
+      await prisma.match.delete({
+          where: { id: lastMatch.id }
+      });
+
+      return { success: true, undoUserId: lastMatch.userBId };
+  }
+
+  async updatePreferences(userId: string, preferences: any) {
+    return prisma.userPreferences.upsert({
+      where: { userId },
+      update: preferences,
+      create: { userId, ...preferences }
     });
+  }
+
+  async getPreferences(userId: string) {
+    return prisma.userPreferences.findUnique({ where: { userId } });
   }
 }
 

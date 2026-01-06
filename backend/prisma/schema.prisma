@@ -21,6 +21,7 @@ model User {
   latitude         Float?
   longitude        Float?
   lastBoostAt      DateTime?    @map("last_boost_at")
+  lastSuperLikeAt  DateTime?    @map("last_super_like_at")
   isVerified       Boolean      @default(false) @map("is_verified")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")

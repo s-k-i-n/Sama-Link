@@ -14,4 +14,7 @@ router.post('/swipe', matchingController.handleSwipe);
 router.get('/preferences', matchingController.getPreferences);
 router.put('/preferences', matchingController.updatePreferences);
 
+// Routes Rewind
+router.post('/rewind', matchingController.rewind);
+
 export default router;

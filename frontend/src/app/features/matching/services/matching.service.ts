@@ -58,7 +58,7 @@ export class MatchingService {
     );
   }
 
-  swipe(targetUserId: string, direction: 'like' | 'pass') {
+  swipe(targetUserId: string, direction: 'like' | 'pass' | 'superlike') {
     // Optimistic removal from suggestions
     const currentSuggestions = this.suggestionsSig();
     this.suggestionsSig.set(currentSuggestions.filter(u => u.id !== targetUserId));
@@ -69,11 +69,17 @@ export class MatchingService {
           this.toastService.success("C'est un match ! Vous pouvez maintenant discuter.");
         }
       }),
+      // Don't catch error here fully, let component handle strict limits (400)
       catchError(err => {
-        // Rollback on error if necessary, or just show toast
-        this.toastService.error(err.error?.message || 'Erreur lors du swipe.');
-        return of(null);
+         // Revert optimistic update if error?
+         // For now, simple logging
+        console.error('Swipe error', err);
+        throw err;
       })
     );
+  }
+
+  rewind() {
+      return this.http.post<any>(`${this.apiUrl}/rewind`, {});
   }
 }

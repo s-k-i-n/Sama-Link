@@ -67,3 +67,17 @@ export const updatePreferences = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Erreur lors de la mise à jour des préférences.' });
   }
 };
+
+/**
+ * Annule le dernier swipe (Rewind)
+ */
+export const rewind = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const result = await matchingService.rewindLastSwipe(userId);
+        res.json(result);
+    } catch (error: any) {
+        logger.error('Erreur rewind:', error);
+        res.status(400).json({ message: error.message || "Impossible d'annuler la dernière action." });
+    }
+};
