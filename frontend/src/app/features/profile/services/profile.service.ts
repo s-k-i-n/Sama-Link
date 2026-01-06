@@ -23,15 +23,26 @@ export class ProfileService {
   // Sync with AuthService currentUser
   currentUser = computed(() => {
     const user = this.authService.currentUser();
-    return user || {
-      id: '',
-      username: 'Invité',
-      isPremium: false,
-      interests: [],
-      gender: 'other',
-      location: '',
-      bio: '',
-      photos: []
+    if (!user) {
+      return {
+        id: '',
+        username: 'Invité',
+        isPremium: false,
+        interests: [],
+        gender: 'other',
+        location: '',
+        bio: '',
+        photos: []
+      } as User;
+    }
+    // Deep fallback for all critical fields to prevent runtime errors
+    return {
+      ...user,
+      interests: user.interests || [],
+      photos: user.photos || [],
+      bio: user.bio || '',
+      location: user.location || '',
+      jobTitle: user.jobTitle || ''
     } as User;
   });
 

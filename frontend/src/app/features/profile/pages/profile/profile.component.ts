@@ -64,7 +64,7 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
             </span>
             <span *ngIf="user().isPremium" class="text-amber-500" title="Premium">👑</span>
           </h1>
-          <p class="text-slate-400 dark:text-slate-500 font-bold text-sm mt-1 uppercase tracking-widest">{{ user().occupation || 'Profession mystérieuse' }}</p>
+          <p class="text-slate-400 dark:text-slate-500 font-bold text-sm mt-1 uppercase tracking-widest">{{ user().jobTitle || 'Profession mystérieuse' }}</p>
           
           <div *ngIf="!user().isVerified" class="mt-4">
              <button 
@@ -185,7 +185,7 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
                     <sl-input label="Religion" [formControl]="form.controls.religion"></sl-input>
                  </div>
                  <div class="grid grid-cols-2 gap-4">
-                    <sl-input label="Métier" [formControl]="form.controls.occupation"></sl-input>
+                    <sl-input label="Métier" [formControl]="form.controls.jobTitle"></sl-input>
                     <sl-input label="Entreprise" [formControl]="form.controls.company"></sl-input>
                  </div>
               </div>
@@ -247,7 +247,7 @@ export class ProfileComponent implements OnInit {
 
   form = this.fb.group({
     bio: ['', [Validators.required, Validators.maxLength(500)]],
-    occupation: [''],
+    jobTitle: [''],
     company: [''],
     education: [''],
     school: [''],
@@ -277,7 +277,7 @@ export class ProfileComponent implements OnInit {
       const u = this.user();
       this.form.patchValue({
         bio: u.bio,
-        occupation: u.occupation, // mapped to jobTitle in backend, we should align
+        jobTitle: u.jobTitle,
         company: u.company,
         education: u.educationLevel, // Align naming
         school: u.school,
