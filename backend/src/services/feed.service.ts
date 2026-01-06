@@ -50,6 +50,15 @@ export class FeedService {
           },
         },
         reactions: userId ? { where: { userId } } : false,
+        matches: userId ? {
+            where: {
+                OR: [
+                    { userAId: userId, status: 'matched' },
+                    { userBId: userId, status: 'matched' }
+                ]
+            },
+            take: 1
+        } : false
       },
     });
   }

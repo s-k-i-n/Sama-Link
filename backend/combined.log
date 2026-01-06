@@ -143,3 +143,13 @@
 {"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
 {"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
 {"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
+{"level":"info","message":"Utilisateur connecté : kali","service":"sama-link-backend"}
+{"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
+{"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
+{"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
+{"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
+{"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}
+{"level":"error","message":"Erreur requestConfessionMatch: Une demande est déjà en cours.","service":"sama-link-backend","stack":"Error: Une demande est déjà en cours.\n    at MatchingService.requestConfessionMatch (/Users/mouhamadousarr/.gemini/antigravity/scratch/sama-link/backend/src/services/matching.service.ts:424:13)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async requestConfessionMatch (/Users/mouhamadousarr/.gemini/antigravity/scratch/sama-link/backend/src/controllers/matching.controller.ts:137:24)"}
+{"level":"error","message":"Erreur requestConfessionMatch: Une demande est déjà en cours.","service":"sama-link-backend","stack":"Error: Une demande est déjà en cours.\n    at MatchingService.requestConfessionMatch (/Users/mouhamadousarr/.gemini/antigravity/scratch/sama-link/backend/src/services/matching.service.ts:424:13)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async requestConfessionMatch (/Users/mouhamadousarr/.gemini/antigravity/scratch/sama-link/backend/src/controllers/matching.controller.ts:137:24)"}
+{"level":"error","message":"Erreur requestConfessionMatch: Une demande est déjà en cours.","service":"sama-link-backend","stack":"Error: Une demande est déjà en cours.\n    at MatchingService.requestConfessionMatch (/Users/mouhamadousarr/.gemini/antigravity/scratch/sama-link/backend/src/services/matching.service.ts:424:13)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async requestConfessionMatch (/Users/mouhamadousarr/.gemini/antigravity/scratch/sama-link/backend/src/controllers/matching.controller.ts:137:24)"}
+{"level":"info","message":"Serveur démarré sur le port 3000 🚀","service":"sama-link-backend"}

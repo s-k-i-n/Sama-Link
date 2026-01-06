@@ -8,6 +8,7 @@ import { FeedService } from '../../services/feed.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { TimeService } from '../../../../core/services/time.service';
+import { MatchingService } from '../../../matching/services/matching.service';
 
 @Component({
   selector: 'app-confession-card',
@@ -22,11 +23,15 @@ import { TimeService } from '../../../../core/services/time.service';
         <!-- Header -->
         <div class="flex justify-between items-start mb-4">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-sage/10 flex items-center justify-center text-xl shadow-inner dark:bg-slate-800 transition-transform group-hover:rotate-6 duration-300">
-              🕵️
+            <div class="w-10 h-10 rounded-2xl bg-sage/10 flex items-center justify-center overflow-hidden shadow-inner dark:bg-slate-800 transition-transform group-hover:rotate-6 duration-300">
+               <img *ngIf="confession.authorAvatar" [src]="confession.authorAvatar" class="w-full h-full object-cover">
+               <span *ngIf="!confession.authorAvatar" class="text-xl">🕵️</span>
             </div>
             <div>
-              <span class="font-bold text-night dark:text-white block text-sm tracking-tight">{{ confession.authorAlias || 'Anonyme' }}</span>
+              <span class="font-bold text-night dark:text-white block text-sm tracking-tight">
+                {{ confession.authorAlias || 'Anonyme' }}
+                <span *ngIf="confession.isMatched" class="ml-1 text-[10px] bg-sage/10 text-sage px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Connecté</span>
+              </span>
               <div class="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
                 <span class="px-1.5 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800">{{ confession.location }}</span>
                 <span>•</span>
@@ -122,6 +127,17 @@ import { TimeService } from '../../../../core/services/time.service';
             </button>
           </div>
           
+          <div *ngIf="!isOwner() && !confession.isMatched" class="flex items-center">
+             <button 
+               (click)="requestConnection()" 
+               [disabled]="isRequested()"
+               class="px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all transform active:scale-95"
+               [ngClass]="isRequested() ? 'bg-slate-100 text-slate-400' : 'bg-sage/10 text-sage hover:bg-sage hover:text-white shadow-lg shadow-sage/10'"
+             >
+               {{ isRequested() ? 'Demande envoyée' : 'Se connecter' }}
+             </button>
+          </div>
+
           <div *ngIf="isOwner() && canEdit()" class="text-[9px] font-black uppercase tracking-widest text-slate-300 dark:text-slate-600 animate-pulse">
             {{ editTimeRemaining() }}s left
           </div>
@@ -169,8 +185,11 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
   moderationService = inject(ModerationService);
   feedService = inject(FeedService);
   authService = inject(AuthService);
+  matchingService = inject(MatchingService);
   toastService = inject(ToastService);
   timeService = inject(TimeService);
+  
+  isRequested = signal(false);
   
   isMenuOpen = signal(false);
   showComments = signal(false);
@@ -294,6 +313,12 @@ export class ConfessionCardComponent implements OnInit, OnDestroy {
         this.toastService.error(err.error?.message || 'Erreur lors de la modification');
         this.isEditing.set(false);
       }
+    });
+  }
+
+  requestConnection() {
+    this.matchingService.requestConfessionMatch(this.confession.id).subscribe({
+      next: () => this.isRequested.set(true)
     });
   }
 }

@@ -9,5 +9,8 @@ export interface Confession {
   isLiked: boolean; // Computed state for current user
   location?: string;
   imageUrl?: string;
+  authorAvatar?: string;
+  isMatched?: boolean;
+  isAnonymous?: boolean;
   tags?: string[];
 }

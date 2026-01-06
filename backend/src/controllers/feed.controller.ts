@@ -34,7 +34,9 @@ export const getConfessions = async (req: Request, res: Response) => {
         location: c.location,
         authorId: c.authorId,
         imageUrl: imageUrl,
-        authorAlias: c.isAnonymous ? 'Anonyme' : (c.author?.username || 'Utilisateur inconnu'),
+        authorAlias: (c.isAnonymous && !c.matches?.length) ? 'Anonyme' : (c.author?.username || 'Utilisateur inconnu'),
+        authorAvatar: (c.isAnonymous && !c.matches?.length) ? null : c.author?.avatarUrl,
+        isMatched: !!c.matches?.length,
         likes: c._count.reactions,
         commentsCount: c._count.comments,
         isLiked: Array.isArray(c.reactions) && c.reactions.length > 0 

@@ -93,4 +93,26 @@ export class MatchingService {
       })
     );
   }
+
+  requestConfessionMatch(confessionId: string) {
+    return this.http.post<any>(`${this.apiUrl}/confession-request`, { confessionId }).pipe(
+      tap(() => this.toastService.success('Demande de connexion envoyée ! ✈️'))
+    );
+  }
+
+  getPendingRequests() {
+    return this.http.get<any[]>(`${this.apiUrl}/pending-requests`);
+  }
+
+  respondToMatchRequest(matchId: string, action: 'accept' | 'decline') {
+    return this.http.post<any>(`${this.apiUrl}/respond-request`, { matchId, action }).pipe(
+      tap(res => {
+        if (action === 'accept') {
+          this.toastService.success('Demande acceptée ! 🎉');
+        } else {
+          this.toastService.info('Demande ignorée.');
+        }
+      })
+    );
+  }
 }

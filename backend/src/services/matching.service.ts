@@ -396,6 +396,108 @@ export class MatchingService {
       // Shuffle and pick 3
       return icebreakers.sort(() => 0.5 - Math.random()).slice(0, 3);
   }
+
+  /**
+   * Demande de connexion via une confession
+   */
+  async requestConfessionMatch(userId: string, confessionId: string) {
+    const confession = await prisma.confession.findUnique({
+      where: { id: confessionId },
+      select: { authorId: true }
+    });
+
+    if (!confession) throw new Error("Confession introuvable.");
+    if (confession.authorId === userId) throw new Error("Vous ne pouvez pas vous connecter à votre propre confession.");
+
+    // Check if a match or request already exists
+    const existing = await prisma.match.findFirst({
+      where: {
+        OR: [
+          { userAId: userId, userBId: confession.authorId },
+          { userAId: confession.authorId, userBId: userId }
+        ]
+      }
+    });
+
+    if (existing) {
+      if (existing.status === 'matched') throw new Error("Vous êtes déjà connectés !");
+      throw new Error("Une demande est déjà en cours.");
+    }
+
+    return prisma.match.create({
+      data: {
+        userAId: userId,
+        userBId: confession.authorId,
+        confessionId: confessionId,
+        status: "pending_confession"
+      }
+    });
+  }
+
+  /**
+   * Répondre à une demande de connexion
+   */
+  async respondToMatchRequest(userId: string, matchId: string, action: 'accept' | 'decline') {
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: { userA: true, userB: true }
+    });
+
+    if (!match || match.userBId !== userId) {
+      throw new Error("Demande introuvable ou non autorisée.");
+    }
+
+    if (action === 'decline') {
+      return prisma.match.delete({ where: { id: matchId } });
+    }
+
+    // ACCEPT
+    const updatedMatch = await prisma.match.update({
+      where: { id: matchId },
+      data: { status: 'matched' }
+    });
+
+    // Notify requester
+    try {
+      const { notificationService } = await import('./notification.service');
+      await notificationService.sendToUser(match.userAId, {
+        title: "Demande acceptée ! 🎉",
+        body: `${match.userB.username} a accepté votre demande de connexion.`,
+        url: `/messages/${match.id}`
+      });
+    } catch (err) {
+      console.error('Notification failed:', err);
+    }
+
+    return updatedMatch;
+  }
+
+  /**
+   * Liste des demandes en attente pour l'utilisateur
+   */
+  async getPendingRequests(userId: string) {
+    return prisma.match.findMany({
+      where: {
+        userBId: userId,
+        status: "pending_confession"
+      },
+      include: {
+        userA: {
+          select: {
+            id: true,
+            username: true, // Only if accepted? User says "if accepted they see name/photo". So here we might mask.
+            avatarUrl: true
+          }
+        },
+        confession: {
+          select: {
+            content: true,
+            imageUrl: true
+          }
+        }
+      }
+    });
+  }
 }
 
 export const matchingService = new MatchingService();

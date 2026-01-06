@@ -167,6 +167,7 @@ model Confession {
   comments    Comment[]
   author      User       @relation(fields: [authorId], references: [id])
   reactions   Reaction[]
+  matches     Match[]
 }
 
 model Reaction {
@@ -196,10 +197,12 @@ model Match {
   userBId     String   @map("user_b_id")
   status      String   @default("pending")
   isSuperLike Boolean  @default(false) @map("is_super_like")
+  confessionId String?  @map("confession_id")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   userA       User     @relation("UserAMatches", fields: [userAId], references: [id])
   userB       User     @relation("UserBMatches", fields: [userBId], references: [id])
+  confession  Confession? @relation(fields: [confessionId], references: [id])
 
   @@unique([userAId, userBId])
 }

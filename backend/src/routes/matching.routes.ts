@@ -20,4 +20,9 @@ router.post('/rewind', matchingController.rewind);
 // Routes Who Liked Me
 router.get('/who-liked-me', matchingController.getWhoLikedMe);
 
+// Routes Confession Connection
+router.post('/confession-request', matchingController.requestConfessionMatch);
+router.post('/respond-request', matchingController.respondToMatchRequest);
+router.get('/pending-requests', matchingController.getPendingRequests);
+
 export default router;

@@ -44,6 +44,8 @@ export interface Match {
   id: string;
   users: [User, User];
   createdAt: Date;
+  status: string;
+  confessionId?: string;
   lastMessage?: string;
   lastMessageTime?: Date;
   unreadCount: number;

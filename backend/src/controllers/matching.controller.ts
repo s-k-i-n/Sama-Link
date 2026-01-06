@@ -124,3 +124,52 @@ export const getWhoLikedMe = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Erreur lors de la récupération des likes." });
     }
 };
+/**
+ * Demande de connexion via une confession
+ */
+export const requestConfessionMatch = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const { confessionId } = req.body;
+        
+        if (!confessionId) return res.status(400).json({ message: "ID de la confession requis." });
+
+        const result = await matchingService.requestConfessionMatch(userId, confessionId);
+        res.json({ message: "Demande de connexion envoyée !", result });
+    } catch (error: any) {
+        logger.error('Erreur requestConfessionMatch:', error);
+        res.status(400).json({ message: error.message || "Erreur lors de la demande." });
+    }
+};
+
+/**
+ * Répondre à une demande
+ */
+export const respondToMatchRequest = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const { matchId, action } = req.body; // action: 'accept' | 'decline'
+
+        if (!matchId || !action) return res.status(400).json({ message: "ID match et action requis." });
+
+        const result = await matchingService.respondToMatchRequest(userId, matchId, action);
+        res.json({ message: action === 'accept' ? "Demande acceptée !" : "Demande déclinée.", result });
+    } catch (error: any) {
+        logger.error('Erreur respondToMatchRequest:', error);
+        res.status(400).json({ message: error.message || "Erreur lors de la réponse." });
+    }
+};
+
+/**
+ * Voir les demandes reçues
+ */
+export const getPendingRequests = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const requests = await matchingService.getPendingRequests(userId);
+        res.json(requests);
+    } catch (error: any) {
+        logger.error('Erreur getPendingRequests:', error);
+        res.status(500).json({ message: "Erreur lors de la récupération des demandes." });
+    }
+};
