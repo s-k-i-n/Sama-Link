@@ -1,60 +1,30 @@
 import { Request, Response } from 'express';
-import prisma from '../lib/prisma';
-import { logger } from '../index';
+import { subscriptionService } from '../services/subscription.service';
+import logger from '../utils/logger';
 
 export const subscribe = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const { plan, durationVal, durationUnit } = req.body; // e.g. GOLD, 1, MONTH
-
-    // Mock Payment Validation
-    // In real world: verify payment intent from Stripe/Wave
-
-    let endDate = new Date();
-    if (durationUnit === 'MONTH') {
-        endDate.setMonth(endDate.getMonth() + durationVal);
-    } else if (durationUnit === 'YEAR') {
-        endDate.setFullYear(endDate.getFullYear() + durationVal);
-    } else {
-        endDate.setDate(endDate.getDate() + 7); // Default week
+    const { plan } = req.body;
+    
+    if (!['GOLD', 'PLATINUM'].includes(plan)) {
+      return res.status(400).json({ message: "Plan invalide." });
     }
 
-    // Create Subscription
-    const subscription = await prisma.subscription.create({
-      data: {
-        userId,
-        plan,
-        startDate: new Date(),
-        endDate,
-        status: 'ACTIVE',
-        provider: 'MOCK'
-      }
-    });
-
-    // Update User to Premium
-    await prisma.user.update({
-      where: { id: userId },
-      data: { isPremium: true }
-    });
-
-    res.json({ success: true, subscription });
+    const result = await subscriptionService.subscribe(userId, plan);
+    res.json({ message: `Félicitations ! Vous êtes maintenant membre ${plan}. 👑`, user: result });
   } catch (error: any) {
-    logger.error('Subscribe Error:', error);
-    res.status(500).json({ message: error.message || 'Erreur abonnement' });
+    logger.error('Erreur subscribe:', error);
+    res.status(400).json({ message: error.message });
   }
 };
 
 export const getStatus = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const sub = await prisma.subscription.findFirst({
-        where: { userId, status: 'ACTIVE', endDate: { gt: new Date() } },
-        orderBy: { endDate: 'desc' }
-    });
-
-    res.json({ isPremium: !!sub, subscription: sub });
-  } catch (error) {
-    logger.error('Get Status Error:', error);
-    res.status(500).json({ message: 'Erreur statut' });
+    const status = await subscriptionService.getStatus(userId);
+    res.json(status);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
   }
 };

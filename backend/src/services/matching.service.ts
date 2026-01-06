@@ -109,7 +109,7 @@ export class MatchingService {
 
     // Check Super Like Limits
     if (direction === 'superlike') {
-        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const user = await prisma.user.findUnique({ where: { id: userId } }) as any;
         const canSuperLike = await this.checkSuperLikeLimit(user);
         if (!canSuperLike) {
             throw new Error("Limite de Super Likes atteinte pour aujourd'hui.");
@@ -122,6 +122,25 @@ export class MatchingService {
                 dailySuperLikeCount: { increment: 1 }
             }
         });
+    }
+
+    // Check Regular Like Limits for FREE users
+    if (direction === 'like') {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (user?.plan === 'FREE') {
+            const canLike = await this.checkLikeLimit(user);
+            if (!canLike) {
+               throw new Error("Limite de Likes atteinte pour aujourd'hui. Passez Premium pour des likes illimités ! 🚀");
+            }
+            // Update counts
+            await prisma.user.update({
+                where: { id: userId },
+                data: { 
+                    lastLikeAt: new Date(),
+                    dailyLikeCount: { increment: 1 }
+                }
+            });
+        }
     }
 
     const isSuperLike = direction === 'superlike';
@@ -198,14 +217,25 @@ export class MatchingService {
 
       if (!lastMatch) throw new Error("Aucune action à annuler.");
       
-      // Allow rewind only if not matched yet? Or undo match too?
-      // Usually we only undo the swipe action. If it caused a match, we dissolve it.
-      
       await prisma.match.delete({
           where: { id: lastMatch.id }
       });
 
       return { success: true, undoUserId: lastMatch.userBId };
+  }
+
+  private async checkLikeLimit(user: any): Promise<boolean> {
+      const today = new Date();
+      const last = user.lastLikeAt ? new Date(user.lastLikeAt) : null;
+      
+      const isSameDay = last && (
+          last.getDate() === today.getDate() && 
+          last.getMonth() === today.getMonth() && 
+          last.getFullYear() === today.getFullYear()
+      );
+
+      const count = isSameDay ? user.dailyLikeCount : 0;
+      return count < 10; // FREE Limit
   }
 
   async updatePreferences(userId: string, preferences: any) {
@@ -220,35 +250,50 @@ export class MatchingService {
     return prisma.userPreferences.findUnique({ where: { userId } });
   }
 
-  /**
-   * Récupère la liste des utilisateurs qui ont liké le profil courant
-   */
+  // Récupère la liste des utilisateurs qui ont liké le profil courant
   async getWhoLikedMe(userId: string) {
-      // Check if user is Premium to decide if we blur/hide data
-      // For now, service returns raw data, Controller handles gating modification?
-      // Better to handle it here or in controller. 
-      // Let's return the list, and let controller or service modify based on premium status.
-      
-      const likes = await prisma.match.findMany({
-          where: {
-              userBId: userId,
-              status: 'pending' // pending means they liked us, but we haven't responded yet
-          },
-          include: {
-              userA: {
-                  select: {
-                      id: true,
-                      username: true,
-                      avatarUrl: true, // We might need to blur this on frontend or return placeholder
-                      birthDate: true,
-                      isPremium: true
-                  }
-              }
-          },
-          orderBy: { createdAt: 'desc' }
-      });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const isPremium = user?.plan !== 'FREE';
 
-      return likes.map(match => match.userA);
+    const likes = await prisma.match.findMany({
+      where: {
+        userBId: userId,
+        status: "pending",
+      },
+      include: {
+        userA: {
+          select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+            birthDate: true,
+            bio: true,
+            location: true,
+            gender: true,
+            interests: { include: { interest: true } }
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // MASK DATA if not Premium
+    return likes.map((l: any) => {
+       const u = l.userA;
+       if (!isPremium) {
+           return {
+               id: u.id,
+               username: "Quelqu'un", // Mask username
+               avatarUrl: u.avatarUrl, // We will blur this in Frontend
+               age: null,
+               bio: "Passez Premium pour voir ce profil !",
+               isBlurred: true
+           };
+       }
+       // Calculate age if not masked
+       const age = u.birthDate ? this.calculateAge(new Date(u.birthDate)) : null;
+       return { ...u, age, isBlurred: false };
+    });
   }
 
   /**

@@ -1,12 +1,12 @@
 import { Router } from 'express';
+import * as subscriptionController from '../controllers/subscription.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import * as subController from '../controllers/subscription.controller';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.post('/subscribe', subController.subscribe);
-router.get('/status', subController.getStatus);
+router.post('/subscribe', subscriptionController.subscribe);
+router.get('/status', subscriptionController.getStatus);
 
 export default router;

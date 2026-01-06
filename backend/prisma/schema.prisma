@@ -12,20 +12,22 @@ model User {
   phone            String?      @unique
   passwordHash     String       @map("password_hash")
   username         String       @unique
-  bio              String?
+  bio              String?      @db.Text
   location         String?
   avatarUrl        String?      @map("avatar_url")
   isPremium        Boolean      @default(false) @map("is_premium")
-  birthDate        DateTime?    @map("birth_date")
-  gender           String?
-  latitude         Float?
-  longitude        Float?
-  lastBoostAt      DateTime?    @map("last_boost_at")
+  plan             Plan         @default(FREE)
+  
   lastSuperLikeAt  DateTime?    @map("last_super_like_at")
   lastLikeAt       DateTime?    @map("last_like_at")
   dailyLikeCount   Int          @default(0) @map("daily_like_count")
   dailySuperLikeCount Int       @default(0) @map("daily_super_like_count")
 
+  birthDate        DateTime?    @map("birth_date")
+  gender           String?
+  latitude         Float?
+  longitude        Float?
+  
   isVerified       Boolean      @default(false) @map("is_verified")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
@@ -97,16 +99,17 @@ model Block {
 }
 
 model Subscription {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  plan      String   // GOLD, PLATINUM
-  startDate DateTime @map("start_date")
-  endDate   DateTime @map("end_date")
-  status    String   // ACTIVE, EXPIRED, CANCELLED
-  provider  String   // STRIPE, WAVE, MANUAL
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User     @relation("UserSubscriptions", fields: [userId], references: [id])
+  id        String             @id @default(uuid())
+  userId    String             @map("user_id")
+  plan      Plan
+  status    SubscriptionStatus @default(ACTIVE)
+  startDate DateTime           @default(now()) @map("start_date")
+  endDate   DateTime           @map("end_date")
+  provider  String?            // STRIPE, WAVE, MANUAL
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  user      User               @relation("UserSubscriptions", fields: [userId], references: [id])
 }
 
 model UserPreferences {
@@ -198,4 +201,16 @@ model Message {
   readAt         DateTime? @map("read_at")
   receiver       User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
   sender         User      @relation("SentMessages", fields: [senderId], references: [id])
+}
+
+enum Plan {
+  FREE
+  GOLD
+  PLATINUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
 }
