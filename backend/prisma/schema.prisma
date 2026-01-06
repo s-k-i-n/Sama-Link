@@ -24,6 +24,7 @@ model User {
   lastSuperLikeAt  DateTime?    @map("last_super_like_at")
   lastLikeAt       DateTime?    @map("last_like_at")
   dailyLikeCount   Int          @default(0) @map("daily_like_count")
+  dailySuperLikeCount Int       @default(0) @map("daily_super_like_count")
 
   isVerified       Boolean      @default(false) @map("is_verified")
   createdAt        DateTime     @default(now()) @map("created_at")

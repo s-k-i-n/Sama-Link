@@ -71,6 +71,16 @@ export const updatePreferences = async (req: Request, res: Response) => {
 export const rewind = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).userId;
+        
+        // Premium Gating
+        const user = await import('../lib/prisma').then(m => m.default.user.findUnique({
+             where: { id: userId }, select: { isPremium: true }
+        }));
+
+        if (!user?.isPremium) {
+            return res.status(403).json({ message: "Le Rewind est une fonctionnalité Premium. 👑" });
+        }
+
         const result = await matchingService.rewindLastSwipe(userId);
         res.json(result);
     } catch (error: any) {

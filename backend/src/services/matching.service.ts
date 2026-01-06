@@ -64,23 +64,26 @@ export class MatchingService {
        }
 
        // Score Calculation
-       let score = 0;
+       let score = 100; // Base Score
        
        // Interest Overlap
        const candidateInterests = candidate.interests.map(ui => ui.interest.name);
        const commonInterests = candidateInterests.filter(i => myInterests.includes(i)).length;
-       score += commonInterests * 5; // 5 points per common interest
+       score += commonInterests * 20; // 20 points per common interest
 
-       // Distance (Mocked for now as we don't have Geo queries yet)
-       // if (distance < prefs.maxDistance) score += (prefs.maxDistance - distance);
+       // Distance (Mocked for now)
+       const distance = 5; // Placeholder for actual distance calculation
+       score -= distance;
 
-       // Recency Bonus
-       const daysSinceLogin = (new Date().getTime() - candidate.updatedAt.getTime()) / (1000 * 3600 * 24);
-       if (daysSinceLogin < 2) score += 10;
-       if (daysSinceLogin < 7) score += 5;
+       // Recency Bonus (Activity Bonus)
+       const lastActive = candidate.lastSeen || candidate.updatedAt;
+       const hoursSinceActive = (new Date().getTime() - lastActive.getTime()) / (1000 * 3600);
+       
+       if (hoursSinceActive < 24) score += 10;
+       if (hoursSinceActive < 2) score += 10; // Extra bonus for very recent activity
 
        return { ...candidate, score, commonInterestsCount: commonInterests };
-    }).filter(c => c !== null);
+    }).filter((c: any) => c !== null);
 
     // Sort by score desc
     scoredCandidates.sort((a: any, b: any) => b.score - a.score);
@@ -114,7 +117,10 @@ export class MatchingService {
         // Deduct/Track use
         await prisma.user.update({
             where: { id: userId },
-            data: { lastSuperLikeAt: new Date() }
+            data: { 
+                lastSuperLikeAt: new Date(),
+                dailySuperLikeCount: { increment: 1 }
+            }
         });
     }
 
@@ -162,15 +168,22 @@ export class MatchingService {
   }
 
   private async checkSuperLikeLimit(user: any): Promise<boolean> {
-      if (user.isPremium) return true; // Unlimited or higher limit for premium
-      
-      if (!user.lastSuperLikeAt) return true;
-
       const today = new Date();
-      const last = new Date(user.lastSuperLikeAt);
+      const last = user.lastSuperLikeAt ? new Date(user.lastSuperLikeAt) : null;
       
-      // Reset at midnight or 24h rolling? Let's do same day check
-      return last.getDate() !== today.getDate() || last.getMonth() !== today.getMonth() || last.getFullYear() !== today.getFullYear();
+      const isSameDay = last && (
+          last.getDate() === today.getDate() && 
+          last.getMonth() === today.getMonth() && 
+          last.getFullYear() === today.getFullYear()
+      );
+
+      const count = isSameDay ? user.dailySuperLikeCount : 0;
+      
+      // If it's a new day, we effectively reset the count in logic 
+      // (The db will be updated on the next use)
+      const limit = user.isPremium ? 5 : 1;
+
+      return count < limit;
   }
 
   /**
