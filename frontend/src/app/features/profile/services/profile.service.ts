@@ -64,6 +64,12 @@ export class ProfileService {
     return this.http.get<Record<string, Interest[]>>(`${environment.apiUrl}/profile/interests`);
   }
 
+  requestVerification(file: File) {
+      const formData = new FormData();
+      formData.append('image', file);
+      return this.http.post<{ message: string, status: string }>(`${environment.apiUrl}/admin/verification/request`, formData);
+  }
+
   // Mock Settings
   settings = signal({
     notifications: true,

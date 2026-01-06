@@ -39,6 +39,7 @@ import { AudioPlayerComponent } from '../../../../shared/components/audio-player
 
         <!-- Menu -->
         <div *ngIf="isMenuOpen()" class="absolute right-4 top-14 w-48 bg-white rounded-lg shadow-xl border border-slate-100 py-1 z-20">
+             <button (click)="reportUser()" class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">🚩 Signaler</button>
              <button (click)="blockUser()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">🚫 Bloquer</button>
         </div>
         <div *ngIf="isMenuOpen()" (click)="toggleMenu()" class="fixed inset-0 z-0"></div>
@@ -229,7 +230,36 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   goBack() { this.router.navigate(['/messages']); }
   toggleMenu() { this.isMenuOpen.update(v => !v); }
-  blockUser() { /* ... */ }
+  
+  blockUser() {
+      if (confirm("Voulez-vous vraiment bloquer cet utilisateur ?")) {
+          const chatId = this.activeChat()?.id;
+          const userId = this.activeChat()?.userId;
+          if (userId) {
+              this.moderationService.blockUser(userId).subscribe({
+                  next: () => {
+                      alert("Utilisateur bloqué.");
+                      this.router.navigate(['/messages']);
+                  },
+                  error: () => alert("Erreur lors du blocage.")
+              });
+          }
+      }
+  }
+
+  reportUser() {
+      const reason = prompt("Raison du signalement (spam, harcèlement, etc.) :");
+      if (reason) {
+          const userId = this.activeChat()?.userId;
+          if (userId) {
+             this.moderationService.reportUser(userId, reason).subscribe({
+                 next: () => alert("Signalement envoyé. Merci."),
+                 error: () => alert("Erreur lors de l'envoi.")
+             });
+          }
+      }
+      this.isMenuOpen.set(false);
+  }
 
   // Typing
   typingTimeout: any;

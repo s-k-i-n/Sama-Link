@@ -1,28 +1,29 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class ModerationService {
-  // Mock Block list
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/moderation`;
+
+  // Keep mock signal for local check until we sync full blocked list
   private blockedUsersSig = signal<string[]>([]);
 
   blockUser(userId: string) {
+    // Optimistic update
     this.blockedUsersSig.update(list => [...list, userId]);
-    console.log(`[Moderation] User ${userId} blocked.`);
-  }
-
-  unblockUser(userId: string) {
-    this.blockedUsersSig.update(list => list.filter(id => id !== userId));
-    console.log(`[Moderation] User ${userId} unblocked.`);
+    
+    return this.http.post(`${this.apiUrl}/block`, { blockedId: userId });
   }
 
   isBlocked(userId: string): boolean {
     return this.blockedUsersSig().includes(userId);
   }
 
-  reportContent(contentId: string, contentType: 'confession' | 'message', reason: string) {
-    console.log(`[Moderation] Reported ${contentType} ${contentId}: ${reason}`);
-    // roughly simulate API call
-    return new Promise(resolve => setTimeout(resolve, 500));
+  reportUser(reportedId: string, reason: string) {
+    return this.http.post(`${this.apiUrl}/report`, { reportedId, reason });
   }
 }

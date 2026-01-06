@@ -37,14 +37,23 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
          </div>
       </div>
 
-      <!-- Main Info -->
-      <div class="mt-20 px-4 text-center">
-         <h1 class="text-2xl font-bold text-night flex items-center justify-center gap-2">
-           {{ user().username }}
-           <span *ngIf="user().isPremium" class="text-amber text-lg" title="Premium">👑</span>
-         </h1>
-         <p class="text-slate-500">{{ user().occupation || 'Métier non renseigné' }}</p>
-      </div>
+       <!-- Main Info -->
+       <div class="mt-20 px-4 text-center">
+          <h1 class="text-2xl font-bold text-night flex items-center justify-center gap-2">
+            {{ user().username }}
+            <span *ngIf="user().isVerified" class="text-blue-500 text-lg" title="Vérifié">✅</span>
+            <span *ngIf="user().isPremium" class="text-amber text-lg" title="Premium">👑</span>
+          </h1>
+          <p class="text-slate-500 mb-2">{{ user().occupation || 'Métier non renseigné' }}</p>
+          
+          <div *ngIf="!user().isVerified">
+             <button 
+               (click)="goToVerification()" 
+               class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">
+               {{ user().verificationStatus === 'PENDING' ? '⏳ Vérification en cours' : '🛡️ Obtenir le badge vérifié' }}
+             </button>
+          </div>
+       </div>
 
       <!-- Content -->
       <div class="px-4 mt-8 max-w-lg mx-auto space-y-6">
@@ -292,5 +301,9 @@ export class ProfileComponent implements OnInit {
 
   goHome() {
     this.router.navigate(['/feed']);
+  }
+
+  goToVerification() {
+      this.router.navigate(['/profile/verification']);
   }
 }
