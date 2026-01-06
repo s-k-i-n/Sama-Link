@@ -127,3 +127,70 @@ export const getInterests = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Erreur serveur' });
     }
 };
+
+/**
+ * Supprime le compte utilisateur et toutes les données associées (GDPR)
+ */
+export const deleteAccount = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        
+        // Prisma cascade delete will handle most if configured, 
+        // otherwise we do it manually. In schema.prisma many are NOT cascade.
+        // Let's perform cleanup.
+        await prisma.match.deleteMany({ where: { OR: [{ userAId: userId }, { userBId: userId }] } });
+        await prisma.message.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } });
+        await prisma.subscription.deleteMany({ where: { userId } });
+        await prisma.userInterest.deleteMany({ where: { userId } });
+        await prisma.confession.deleteMany({ where: { authorId: userId } });
+        
+        await prisma.user.delete({ where: { id: userId } });
+        
+        res.json({ message: "Compte supprimé avec succès. Adieu ! 👋" });
+    } catch (error) {
+        logger.error('Error deleting account:', error);
+        res.status(500).json({ message: "Erreur lors de la suppression." });
+    }
+};
+
+/**
+ * Exporte les données utilisateur (GDPR)
+ */
+export const exportData = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                interests: { include: { interest: true } },
+                sentMessages: true,
+                receivedMessages: true,
+                subscriptions: true
+            }
+        });
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Sanitized export
+        const exportObj = {
+            profile: {
+                username: user.username,
+                email: user.email,
+                bio: user.bio,
+                location: user.location,
+                interests: user.interests.map(i => i.interest.name)
+            },
+            activity: {
+                messagesSentCount: user.sentMessages.length,
+                messagesReceivedCount: user.receivedMessages.length,
+                subscriptionHistory: user.subscriptions
+            },
+            exportedAt: new Date()
+        };
+
+        res.json(exportObj);
+    } catch (error) {
+        logger.error('Error exporting data:', error);
+        res.status(500).json({ message: "Erreur export." });
+    }
+};

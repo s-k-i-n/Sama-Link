@@ -71,7 +71,20 @@ model User {
   blocksMade       Block[]      @relation("MyBlocks")
   blockedBy        Block[]      @relation("BlockedByMe")
 
+  pushSubscriptions PushSubscription[]
+  
   @@index([phone])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Report {
@@ -119,6 +132,8 @@ model UserPreferences {
   maxAge           Int      @default(99)
   maxDistance      Int      @default(50) 
   genderPreference String?  @map("gender_preference")
+  passportLatitude Float?   @map("passport_latitude")
+  passportLongitude Float?  @map("passport_longitude")
   user             User     @relation(fields: [userId], references: [id])
 }
 

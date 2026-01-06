@@ -11,12 +11,17 @@ export class MatchingService {
     // 1. Récupérer les préférences de l'utilisateur ou valeurs par défaut
     const userPrefs = await prisma.userPreferences.findUnique({ 
       where: { userId },
-      include: { user: { include: { interests: { include: { interest: true } } } } } // Get user interests for scoring
+      include: { user: { include: { interests: { include: { interest: true } } } } } // Get user for premium status AND interests
     }) as any;
 
-    const defaultPrefs = { minAge: 18, maxAge: 99, genderPreference: null, maxDistance: 50 };
+    const defaultPrefs = { minAge: 18, maxAge: 99, genderPreference: null, maxDistance: 50, passportLatitude: null, passportLongitude: null };
     const prefs = userPrefs || defaultPrefs;
-    const myInterests = userPrefs?.user?.interests?.map((ui: any) => ui.interest.name) || [];
+    const user = userPrefs?.user;
+    const myInterests = user?.interests?.map((ui: any) => (ui as any).interest.name) || [];
+
+    // Base coordinates for distance (use Passport if user is premium and has it set)
+    const baseLat = (user?.isPremium && prefs.passportLatitude) ? prefs.passportLatitude : user?.latitude;
+    const baseLng = (user?.isPremium && prefs.passportLongitude) ? prefs.passportLongitude : user?.longitude;
 
     // 2. Calculer les dates de naissance min/max pour le filtre d'âge
     const today = new Date();
@@ -71,9 +76,13 @@ export class MatchingService {
        const commonInterests = candidateInterests.filter(i => myInterests.includes(i)).length;
        score += commonInterests * 20; // 20 points per common interest
 
-       // Distance (Mocked for now)
-       const distance = 5; // Placeholder for actual distance calculation
-       score -= distance;
+       // Distance Logic
+       let distance = 0;
+       if (baseLat && baseLng && candidate.latitude && candidate.longitude) {
+           distance = this.calculateDistance(baseLat, baseLng, candidate.latitude, candidate.longitude);
+           if (distance > prefs.maxDistance) return null; // Hard filter
+       }
+       score -= Math.min(distance, 50); // Deduct up to 50 points based on distance
 
        // Recency Bonus (Activity Bonus)
        const lastActive = candidate.lastSeen || candidate.updatedAt;
@@ -82,7 +91,12 @@ export class MatchingService {
        if (hoursSinceActive < 24) score += 10;
        if (hoursSinceActive < 2) score += 10; // Extra bonus for very recent activity
 
-       return { ...candidate, score, commonInterestsCount: commonInterests };
+       return { 
+         ...candidate, 
+         interests: candidateInterests,
+         score, 
+         commonInterestsCount: commonInterests 
+       };
     }).filter((c: any) => c !== null);
 
     // Sort by score desc
@@ -99,6 +113,18 @@ export class MatchingService {
       age--;
     }
     return age;
+  }
+
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Rayon de la Terre en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
   }
 
   /**
@@ -170,6 +196,26 @@ export class MatchingService {
             isSuperLike: existingInterest.isSuperLike || isSuperLike 
         },
       });
+
+      // Notify both users
+      try {
+        const { notificationService } = await import('./notification.service');
+        // Notify the current user (the one who just swiped)
+        await notificationService.sendToUser(userId, {
+            title: "C'est un match ! ❤️",
+            body: "Vous avez une nouvelle connexion sur Sama Link.",
+            url: `/messages/${match.id}`
+        });
+        // Notify the target user
+        await notificationService.sendToUser(targetUserId, {
+            title: "Nouveau match ! 🔥",
+            body: "Quelqu'un de spécial vient de vous liker en retour.",
+            url: `/messages/${match.id}`
+        });
+      } catch (err) {
+        console.error('Match notification failed:', err);
+      }
+
       return { isMatch: true, matchId: match.id, superLike: match.isSuperLike };
     }
 
@@ -209,6 +255,11 @@ export class MatchingService {
    * Rewind last action (Premium feature usually)
    */
   async rewindLastSwipe(userId: string) {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user?.isPremium) {
+          throw new Error("Passez Premium pour utiliser le Rewind ! ⏪👑");
+      }
+
       // Find last action where user was initiator (A)
       const lastMatch = await prisma.match.findFirst({
           where: { userAId: userId },
@@ -239,6 +290,14 @@ export class MatchingService {
   }
 
   async updatePreferences(userId: string, preferences: any) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    
+    // Passport Protection
+    if (!user?.isPremium && (preferences.passportLatitude || preferences.passportLongitude)) {
+        delete preferences.passportLatitude;
+        delete preferences.passportLongitude;
+    }
+
     return prisma.userPreferences.upsert({
       where: { userId },
       update: preferences,
@@ -292,7 +351,8 @@ export class MatchingService {
        }
        // Calculate age if not masked
        const age = u.birthDate ? this.calculateAge(new Date(u.birthDate)) : null;
-       return { ...u, age, isBlurred: false };
+       const interestList = u.interests.map((ui: any) => ui.interest.name);
+       return { ...u, age, interests: interestList, isBlurred: false };
     });
   }
 

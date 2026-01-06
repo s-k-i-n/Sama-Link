@@ -66,3 +66,21 @@ export const getPendingVerifications = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Erreur serveur" });
     }
 };
+export const setPremium = async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const { plan } = req.body; // GOLD, PLATINUM, FREE
+
+        const user = await (prisma.user as any).update({
+            where: { id: userId },
+            data: {
+                plan,
+                isPremium: plan !== 'FREE'
+            }
+        });
+
+        res.json({ message: `Plan mis à jour : ${plan}`, user });
+    } catch(error) {
+        res.status(500).json({ message: "Erreur serveur" });
+    }
+};

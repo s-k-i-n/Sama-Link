@@ -11,5 +11,6 @@ router.post('/verification/request', authenticate, upload.single('image'), admin
 // Admin routes (Should have logic to check if user is admin, but omitting for prototype)
 router.post('/verification/:userId/decision', authenticate, adminController.approveVerification);
 router.get('/verification/pending', authenticate, adminController.getPendingVerifications);
+router.post('/user/:userId/premium', authenticate, adminController.setPremium);
 
 export default router;

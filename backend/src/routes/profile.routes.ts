@@ -16,4 +16,8 @@ router.put('/', profileController.updateProfile);
 // GET /api/profile/interests
 router.get('/interests', profileController.getInterests);
 
+// GDPR
+router.get('/export', profileController.exportData);
+router.delete('/', profileController.deleteAccount);
+
 export default router;

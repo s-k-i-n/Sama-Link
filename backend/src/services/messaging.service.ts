@@ -14,11 +14,12 @@ export class MessagingService {
         }
     }
 
+    const receiverId = await this.getReceiverId(conversationId, senderId);
     const message = await prisma.message.create({
       data: {
         conversationId,
         senderId,
-        receiverId: await this.getReceiverId(conversationId, senderId),
+        receiverId,
         content,
         type,
         metadata
@@ -27,6 +28,19 @@ export class MessagingService {
         sender: { select: { id: true, username: true, avatarUrl: true } }
       }
     });
+
+    // Notify Receiver via Push
+    try {
+        const { notificationService } = await import('./notification.service');
+        await notificationService.sendToUser(receiverId, {
+            title: `Nouveau message de ${message.sender.username}`,
+            body: type === 'TEXT' ? content : (type === 'AUDIO' ? 'Message vocal 🎤' : 'Image 📸'),
+            url: `/messages/${conversationId}`
+        });
+    } catch (err) {
+        console.error('Push notification failed:', err);
+    }
+
     return message;
   }
 

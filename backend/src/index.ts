@@ -97,6 +97,10 @@ import moderationRoutes from './routes/moderation.routes';
 app.use('/api/moderation', moderationRoutes);
 console.log("Routes Moderation enregistrées");
 
+import notificationRoutes from './routes/notification.routes';
+app.use('/api/notifications', notificationRoutes);
+console.log("Routes Notifications enregistrées");
+
 // Route de base pour vérifier que le serveur tourne
 app.get("/", (req, res) => {
   res.json({
