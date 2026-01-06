@@ -10,4 +10,8 @@ router.use(authenticate);
 router.get('/suggestions', matchingController.getSuggestions);
 router.post('/swipe', matchingController.handleSwipe);
 
+// Routes préférences
+router.get('/preferences', matchingController.getPreferences);
+router.put('/preferences', matchingController.updatePreferences);
+
 export default router;

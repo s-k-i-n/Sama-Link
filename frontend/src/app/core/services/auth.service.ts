@@ -2,9 +2,16 @@ import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { StorageService } from './storage.service';
 import { ToastService } from './toast.service';
+
+export interface AuthResponse {
+  token: string;
+  user: any; // On pourrait typer User plus précisément plus tard
+  message?: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +21,7 @@ export class AuthService {
   private storage = inject(StorageService);
   private router = inject(Router);
   private toastService = inject(ToastService);
-  private apiUrl = `${environment.apiUrl}/auth`;
+  private apiUrl = `${environment.apiUrl}`;
   
   // Use Signals for state management as requested
   currentUser = signal<any | null>(null);
@@ -38,25 +45,30 @@ export class AuthService {
     }
   }
 
-  register(userData: any) {
-    return this.http.post<any>(`${this.apiUrl}/register`, userData).pipe(
-      tap(res => {
-        this.setSession(res);
-        this.toastService.success('Compte créé avec succès ! Bienvenue.');
-      })
+  /**
+   * Connexion utilisateur (Email/Phone/Username + Password)
+   */
+  login(identifier: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, { identifier, password }).pipe(
+      tap(response => this.handleAuthSuccess(response))
     );
   }
 
-  login(credentials: any) {
-    return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
-      tap(res => {
-        this.setSession(res);
-        this.toastService.success(`Heureux de vous revoir, ${res.user.username} !`);
-      })
+  /**
+   * Inscription utilisateur
+   */
+  register(username: string, password: string, email?: string, phone?: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, { username, password, email, phone }).pipe(
+      tap(response => this.handleAuthSuccess(response))
     );
   }
 
-  private setSession(authResult: any) {
+  private handleAuthSuccess(authResult: AuthResponse) {
+    this.setSession(authResult);
+    this.toastService.success(`Heureux de vous revoir, ${authResult.user.username || authResult.user.email || 'utilisateur'} !`);
+  }
+
+  private setSession(authResult: AuthResponse) {
     this.storage.setItem('access_token', authResult.token);
     this.storage.setItem('user', JSON.stringify(authResult.user));
     this.currentUser.set(authResult.user);

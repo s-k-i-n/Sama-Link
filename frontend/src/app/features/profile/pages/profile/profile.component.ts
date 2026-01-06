@@ -1,8 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ProfileService } from '../../services/profile.service';
+import { ProfileService, Interest } from '../../services/profile.service';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 import { SlInputComponent } from '../../../../shared/ui/sl-input/sl-input';
 import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
@@ -64,15 +64,28 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
                     <span *ngFor="let interest of user().interests" class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm">
                        {{ interest }}
                     </span>
+                    <span *ngIf="user().interests.length === 0" class="text-slate-400 italic text-sm">Aucun intérêt ajouté.</span>
                  </div>
               </div>
 
               <div class="mt-6 flex flex-col gap-2 text-sm text-slate-600">
                  <div class="flex items-center gap-2">
-                    <span>📍</span> {{ user().location }}
+                    <span class="w-6 text-center">📍</span> {{ user().location }}
                  </div>
-                 <div class="flex items-center gap-2">
-                    <span>🎓</span> {{ user().education || 'Non renseigné' }}
+                 <div *ngIf="user().height" class="flex items-center gap-2">
+                    <span class="w-6 text-center">📏</span> {{ user().height }} cm
+                 </div>
+                 <div *ngIf="user().occupation" class="flex items-center gap-2">
+                    <span class="w-6 text-center">💼</span> {{ user().occupation }} <span *ngIf="user().company">chez {{ user().company }}</span>
+                 </div>
+                 <div *ngIf="user().school || user().educationLevel" class="flex items-center gap-2">
+                    <span class="w-6 text-center">🎓</span> {{ user().educationLevel }} <span *ngIf="user().school">à {{ user().school }}</span>
+                 </div>
+                 <div *ngIf="user().religion" class="flex items-center gap-2">
+                    <span class="w-6 text-center">🕌</span> {{ user().religion }}
+                 </div>
+                 <div *ngIf="user().children" class="flex items-center gap-2">
+                    <span class="w-6 text-center">👶</span> {{ user().children }}
                  </div>
               </div>
            </sl-card>
@@ -94,14 +107,71 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
                  <button type="button" (click)="toggleEdit()" class="text-slate-400 hover:text-red-500">Annuler</button>
               </div>
 
-              <div class="space-y-4">
-                 <sl-input label="Bio" [formControl]="form.controls.bio" type="textarea"></sl-input>
-                 <sl-input label="Métier" [formControl]="form.controls.occupation"></sl-input>
-                 <sl-input label="Études" [formControl]="form.controls.education"></sl-input>
-                 <sl-input label="Localisation" [formControl]="form.controls.location"></sl-input>
+              <div class="space-y-8">
+                 <!-- Bio & Basics -->
+                 <div class="space-y-4">
+                    <h4 class="font-bold text-sm text-slate-400 uppercase tracking-widest border-b pb-2">Base</h4>
+                    <sl-input label="Bio" [formControl]="form.controls.bio" type="textarea"></sl-input>
+                    <sl-input label="Localisation" [formControl]="form.controls.location"></sl-input>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                      <sl-input label="Taille (cm)" [formControl]="form.controls.height" type="number"></sl-input>
+                      <sl-input label="Genre" [formControl]="form.controls.gender"></sl-input>
+                    </div>
+                 </div>
+
+                 <!-- Work & Education -->
+                 <div class="space-y-4">
+                    <h4 class="font-bold text-sm text-slate-400 uppercase tracking-widest border-b pb-2">Travail & Études</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                      <sl-input label="Métier" [formControl]="form.controls.occupation"></sl-input>
+                      <sl-input label="Entreprise" [formControl]="form.controls.company"></sl-input>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                       <sl-input label="École" [formControl]="form.controls.school"></sl-input>
+                       <sl-input label="Niveau d'études" [formControl]="form.controls.education"></sl-input>
+                    </div>
+                 </div>
+
+                 <!-- Lifestyle -->
+                 <div class="space-y-4">
+                    <h4 class="font-bold text-sm text-slate-400 uppercase tracking-widest border-b pb-2">Style de vie</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                       <sl-input label="Religion" [formControl]="form.controls.religion"></sl-input>
+                       <sl-input label="Enfants" [formControl]="form.controls.children"></sl-input>
+                    </div>
+                     <div class="grid grid-cols-2 gap-4">
+                       <sl-input label="Alcool" [formControl]="form.controls.drinking"></sl-input>
+                       <sl-input label="Tabac" [formControl]="form.controls.smoking"></sl-input>
+                    </div>
+                 </div>
+
+                 <!-- Interests Selection -->
+                 <div class="space-y-4">
+                     <h4 class="font-bold text-sm text-slate-400 uppercase tracking-widest border-b pb-2">Intérêts</h4>
+                     <p class="text-xs text-slate-500 mb-2">Sélectionnez vos centres d'intérêt pour de meilleurs matchs.</p>
+                     
+                     <div *ngIf="availableInterests() as categories" class="space-y-4">
+                         <div *ngFor="let category of objectKeys(categories)">
+                             <h5 class="text-sm font-semibold text-night mb-2">{{ category }}</h5>
+                             <div class="flex flex-wrap gap-2">
+                                 <button *ngFor="let interest of categories[category]" 
+                                         type="button"
+                                         (click)="toggleInterest(interest.name)"
+                                         [class.bg-mint]="isSelected(interest.name)"
+                                         [class.text-white]="isSelected(interest.name)"
+                                         [class.bg-slate-100]="!isSelected(interest.name)"
+                                         [class.text-slate-600]="!isSelected(interest.name)"
+                                         class="px-3 py-1 rounded-full text-sm transition-colors border border-transparent hover:border-mint">
+                                     {{ interest.icon }} {{ interest.name }}
+                                 </button>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
               </div>
 
-              <div class="mt-6">
+              <div class="mt-8">
                  <sl-button type="submit" variant="primary" [block]="true" [disabled]="form.invalid">Enregistrer</sl-button>
               </div>
            </sl-card>
@@ -111,20 +181,43 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
     </div>
   `
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   profileService = inject(ProfileService);
   fb = inject(FormBuilder);
   private router = inject(Router);
   
   user = this.profileService.currentUser;
   isEditing = signal(false);
+  availableInterests = signal<Record<string, Interest[]>>({});
+  
+  // Track selected interests manually as FormArray is verbose for simple selection
+  selectedInterests = signal<string[]>([]);
 
   form = this.fb.group({
     bio: ['', [Validators.required, Validators.maxLength(500)]],
     occupation: [''],
+    company: [''],
     education: [''],
-    location: ['', Validators.required]
+    school: [''],
+    location: ['', Validators.required],
+    height: [null as number | null],
+    religion: [''],
+    drinking: [''],
+    smoking: [''],
+    children: [''],
+    gender: ['']
   });
+
+  ngOnInit() {
+      this.profileService.loadProfile();
+      this.profileService.getInterests().subscribe(interests => {
+          this.availableInterests.set(interests);
+      });
+  }
+
+  objectKeys(obj: any) {
+      return Object.keys(obj);
+  }
 
   toggleEdit() {
     if (!this.isEditing()) {
@@ -132,17 +225,46 @@ export class ProfileComponent {
       const u = this.user();
       this.form.patchValue({
         bio: u.bio,
-        occupation: u.occupation,
-        education: u.education,
-        location: u.location
+        occupation: u.occupation, // mapped to jobTitle in backend, we should align
+        company: u.company,
+        education: u.educationLevel, // Align naming
+        school: u.school,
+        location: u.location,
+        height: u.height,
+        religion: u.religion,
+        drinking: u.drinking,
+        smoking: u.smoking,
+        children: u.children,
+        gender: u.gender
       });
+      // Initialize selected interests
+      this.selectedInterests.set([...(u.interests || [])]);
     }
     this.isEditing.update(v => !v);
   }
 
+  toggleInterest(name: string) {
+      this.selectedInterests.update(current => {
+          if (current.includes(name)) {
+              return current.filter(i => i !== name);
+          } else {
+              if (current.length >= 10) return current; // Max limit
+              return [...current, name];
+          }
+      });
+  }
+
+  isSelected(name: string) {
+      return this.selectedInterests().includes(name);
+  }
+
   save() {
     if (this.form.valid) {
-      this.profileService.updateProfile(this.form.value as any);
+      const updates = {
+          ...this.form.value,
+          interests: this.selectedInterests()
+      };
+      this.profileService.updateProfile(updates as any);
       this.isEditing.set(false);
     }
   }

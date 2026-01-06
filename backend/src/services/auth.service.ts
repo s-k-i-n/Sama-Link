@@ -8,10 +8,14 @@ export class AuthService {
   /**
    * Enregistre un nouvel utilisateur
    */
-  async register(data: { email: string; passwordHash: string; username: string }) {
+  /**
+   * Enregistre un nouvel utilisateur
+   */
+  async register(data: { email?: string; phone?: string; passwordHash: string; username: string }) {
     return prisma.user.create({
       data: {
         email: data.email,
+        phone: data.phone,
         passwordHash: data.passwordHash,
         username: data.username,
       },
@@ -28,6 +32,15 @@ export class AuthService {
   }
 
   /**
+   * Recherche un utilisateur par téléphone
+   */
+  async findByPhone(phone: string) {
+    return prisma.user.findUnique({
+      where: { phone },
+    });
+  }
+
+  /**
    * Recherche un utilisateur par nom d'utilisateur
    */
   async findByUsername(username: string) {
@@ -37,12 +50,31 @@ export class AuthService {
   }
 
   /**
-   * Recherche un utilisateur par email ou nom d'utilisateur
+   * Recherche un utilisateur par identifiant (email, téléphone ou username)
    */
-  async findByEmailOrUsername(email: string, username: string) {
+  async findByIdentifier(identifier: string) {
     return prisma.user.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        OR: [
+          { email: identifier },
+          { phone: identifier },
+          { username: identifier }
+        ],
+      },
+    });
+  }
+
+  /**
+   * Recherche un utilisateur par email, téléphone ou nom d'utilisateur (pour vérification existence)
+   */
+  async findByEmailOrPhoneOrUsername(email: string | undefined, phone: string | undefined, username: string) {
+    const conditions: any[] = [{ username }];
+    if (email) conditions.push({ email });
+    if (phone) conditions.push({ phone });
+
+    return prisma.user.findFirst({
+      where: {
+        OR: conditions,
       },
     });
   }
@@ -55,12 +87,17 @@ export class AuthService {
   }
 
   /**
-   * Vérifie un mot de passe (placeholder si bcrypt utilisé plus tard)
+   * Hash un mot de passe
+   */
+  async hashPassword(password: string) {
+    return bcrypt.hash(password, 10);
+  }
+
+  /**
+   * Vérifie un mot de passe
    */
   async verifyPassword(password: string, hash: string) {
-    // Pour l'instant on compare en clair si c'est ce qui est stocké, 
-    // mais le service est prêt pour bcrypt.
-    return password === hash; 
+    return bcrypt.compare(password, hash);
   }
 }
 

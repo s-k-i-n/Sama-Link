@@ -1,12 +1,22 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { StorageService } from '../../../core/services/storage.service';
+import { environment } from '../../../../environments/environment';
+import { tap } from 'rxjs/operators';
+
+export interface Interest {
+    id: string;
+    name: string;
+    icon: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
+  private http = inject(HttpClient);
   private authService = inject(AuthService);
   private storageService = inject(StorageService);
 
@@ -16,13 +26,31 @@ export class ProfileService {
     return user || {
       id: '',
       username: 'Invité',
-      isPremium: false
+      isPremium: false,
+      interests: []
     } as User;
   });
 
+  loadProfile() {
+    this.http.get<User>(`${environment.apiUrl}/profile`).subscribe({
+      next: (user) => {
+        // Update AuthService state which drives the computed currentUser
+        this.authService.currentUser.set(user);
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
+  }
+
   updateProfile(updates: Partial<User>) {
-    // TODO: Implement PUT /api/profile
-    this.authService.currentUser.update(user => user ? { ...user, ...updates } : null);
+    return this.http.put<User>(`${environment.apiUrl}/profile`, updates).pipe(
+        tap(updatedUser => {
+             this.authService.currentUser.set(updatedUser);
+        })
+    ).subscribe();
+  }
+  
+  getInterests() {
+    return this.http.get<Record<string, Interest[]>>(`${environment.apiUrl}/profile/interests`);
   }
 
   // Mock Settings

@@ -39,3 +39,31 @@ export const handleSwipe = async (req: Request, res: Response) => {
     res.status(400).json({ message: error.message || 'Erreur lors du traitement du swipe.' });
   }
 };
+
+/**
+ * Récupère les préférences de l'utilisateur
+ */
+export const getPreferences = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const prefs = await matchingService.getPreferences(userId);
+    res.json(prefs || { minAge: 18, maxAge: 99, genderPreference: 'all', maxDistance: 50 });
+  } catch (error) {
+    logger.error('Erreur getPreferences:', error);
+    res.status(500).json({ message: 'Erreur lors de la récupération des préférences.' });
+  }
+};
+
+/**
+ * Met à jour les préférences
+ */
+export const updatePreferences = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const prefs = await matchingService.updatePreferences(userId, req.body);
+    res.json(prefs);
+  } catch (error) {
+    logger.error('Erreur updatePreferences:', error);
+    res.status(500).json({ message: 'Erreur lors de la mise à jour des préférences.' });
+  }
+};

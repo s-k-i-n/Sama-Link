@@ -7,17 +7,26 @@ import { Router, RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { User } from '../../../../core/models/user.model';
 
+import { FiltersModalComponent } from '../../components/filters-modal/filters-modal.component';
+
 @Component({
   selector: 'app-suggestions',
   standalone: true,
-  imports: [CommonModule, SwipeCardComponent, MatchModalComponent, RouterLink],
+  imports: [CommonModule, SwipeCardComponent, MatchModalComponent, RouterLink, FiltersModalComponent],
   template: `
     <div class="min-h-screen bg-ivory flex flex-col">
       <!-- Header -->
       <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center sticky top-0 z-20">
         <button routerLink="/feed" class="text-sage font-bold text-xl hover:scale-105 transition-transform">Sama Link</button>
-        <h1 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Suggestions</h1>
-        <div class="w-10"></div> <!-- Spacer -->
+        
+        <div class="flex items-center gap-2">
+             <h1 class="text-sm font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Suggestions</h1>
+             <button (click)="filterModal.open()" class="p-2 text-slate-400 hover:text-sage transition-colors rounded-full hover:bg-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+             </button>
+        </div>
       </header>
 
       <main class="flex-grow container mx-auto max-w-lg p-4 relative flex flex-col items-center justify-center">
@@ -32,8 +41,10 @@ import { User } from '../../../../core/models/user.model';
         <div *ngIf="!matchingService.isLoading() && matchingService.suggestions().length === 0" class="text-center py-20 px-6">
           <div class="text-6xl mb-6">🏝️</div>
           <h2 class="text-2xl font-bold text-night mb-2">C'est tout pour aujourd'hui !</h2>
-          <p class="text-slate-500 mb-8 max-w-xs mx-auto">Revenez plus tard pour découvrir de nouveaux profils ou partagez une confession pour attirer l'attention.</p>
-          <button (click)="matchingService.loadSuggestions()" class="btn btn-primary rounded-full px-8">Réessayer</button>
+          <p class="text-slate-500 mb-8 max-w-xs mx-auto">Revenez plus tard pour découvrir de nouveaux profils ou réglez vos filtres.</p>
+          <button (click)="filterModal.open()" class="btn btn-outline mb-4">Ajuster les filtres</button>
+          
+          <button (click)="matchingService.loadSuggestions()" class="block w-full btn btn-primary rounded-full px-8">Réessayer</button>
         </div>
 
         <!-- Discovery Stack -->
@@ -48,7 +59,9 @@ import { User } from '../../../../core/models/user.model';
         </div>
       </main>
 
-      <!-- Match Celebration Modal -->
+      <!-- Modals -->
+      <app-filters-modal #filterModal></app-filters-modal>
+
       <app-match-modal
         [isOpen]="isMatchModalOpen()"
         [matchedUser]="matchedUser()"

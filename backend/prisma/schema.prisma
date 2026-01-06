@@ -8,13 +8,20 @@ datasource db {
 
 model User {
   id               String       @id @default(uuid())
-  email            String       @unique
+  email            String?      @unique
+  phone            String?      @unique
   passwordHash     String       @map("password_hash")
   username         String       @unique
   bio              String?
   location         String?
   avatarUrl        String?      @map("avatar_url")
   isPremium        Boolean      @default(false) @map("is_premium")
+  birthDate        DateTime?    @map("birth_date")
+  gender           String?
+  latitude         Float?
+  longitude        Float?
+  lastBoostAt      DateTime?    @map("last_boost_at")
+  isVerified       Boolean      @default(false) @map("is_verified")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
   comments         Comment[]
@@ -24,6 +31,54 @@ model User {
   receivedMessages Message[]    @relation("ReceivedMessages")
   sentMessages     Message[]    @relation("SentMessages")
   reactions        Reaction[]
+  preferences      UserPreferences?
+  
+  // Enhanced Profile Fields
+  photos           String[]
+  height           Int?
+  jobTitle         String?      @map("job_title")
+  company          String?
+  school           String?
+  educationLevel   String?      @map("education_level") // High School, Bachelor, Master, PhD
+  religion         String?
+  drinking         String?      // Never, Socially, Regularly
+  smoking          String?      // Never, Socially, Regularly
+  children         String?      // Have, Don't have, Want, Don't want
+  languages        String[]
+  zodiacSign       String?      @map("zodiac_sign")
+  
+  interests        UserInterest[]
+
+  @@index([phone])
+}
+
+model UserPreferences {
+  id               String   @id @default(uuid())
+  userId           String   @unique @map("user_id")
+  minAge           Int      @default(18)
+  maxAge           Int      @default(99)
+  maxDistance      Int      @default(50) 
+  genderPreference String?  @map("gender_preference")
+  user             User     @relation(fields: [userId], references: [id])
+}
+
+model Interest {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  category  String         // Sport, Music, Food, etc.
+  icon      String?        // Emoji or icon name
+  users     UserInterest[]
+}
+
+model UserInterest {
+  userId     String   @map("user_id")
+  interestId String   @map("interest_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([userId, interestId])
 }
 
 model Confession {
@@ -61,14 +116,15 @@ model Comment {
 }
 
 model Match {
-  id        String   @id @default(uuid())
-  userAId   String   @map("user_a_id")
-  userBId   String   @map("user_b_id")
-  status    String   @default("pending")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  userA     User     @relation("UserAMatches", fields: [userAId], references: [id])
-  userB     User     @relation("UserBMatches", fields: [userBId], references: [id])
+  id          String   @id @default(uuid())
+  userAId     String   @map("user_a_id")
+  userBId     String   @map("user_b_id")
+  status      String   @default("pending")
+  isSuperLike Boolean  @default(false) @map("is_super_like")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  userA       User     @relation("UserAMatches", fields: [userAId], references: [id])
+  userB       User     @relation("UserBMatches", fields: [userBId], references: [id])
 
   @@unique([userAId, userBId])
 }

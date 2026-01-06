@@ -85,6 +85,7 @@ import feedRoutes from './routes/feed.routes';
 import interactionRoutes from './routes/interaction.routes';
 import matchingRoutes from './routes/matching.routes';
 import messagingRoutes from './routes/messaging.routes';
+import profileRoutes from './routes/profile.routes';
 
 // Utilisation des routes
 console.log("Enregistrement des routes...");
@@ -99,6 +100,8 @@ app.use('/api/matching', matchingRoutes);
 console.log("Routes Matching enregistrées");
 app.use('/api/messaging', messagingRoutes);
 console.log("Routes Messaging enregistrées");
+app.use('/api/profile', profileRoutes);
+console.log("Routes Profile enregistrées");
 
 // Route de base pour vérifier que le serveur tourne
 app.get("/", (req, res) => {

@@ -28,11 +28,11 @@ import { AuthService } from '../../../../core/services/auth.service';
         <sl-card>
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <sl-input 
-              label="Email" 
-              type="email" 
-              formControlName="email"
-              placeholder="votre@email.com"
-              [error]="getError('email')"
+              label="Identifiant" 
+              type="text" 
+              formControlName="identifier"
+              placeholder="Email, téléphone ou pseudo"
+              [error]="getError('identifier')"
             ></sl-input>
 
             <div>
@@ -75,7 +75,7 @@ export class LoginComponent {
   isLoading = signal(false);
 
   loginForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    identifier: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(6)]]
   });
 
@@ -83,7 +83,6 @@ export class LoginComponent {
     const control = this.loginForm.get(controlName);
     if (control?.touched && control?.errors) {
       if (control.errors['required']) return 'Ce champ est requis';
-      if (control.errors['email']) return 'Email invalide';
       if (control.errors['minlength']) return 'Mot de passe trop court';
     }
     return '';
@@ -93,12 +92,14 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
       
-      this.authService.login(this.loginForm.value).subscribe({
+      const { identifier, password } = this.loginForm.value;
+
+      this.authService.login(identifier!, password!).subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.router.navigate(['/feed']); // Directement au feed si déjà en règle
+          this.router.navigate(['/feed']); 
         },
-        error: (err) => {
+        error: (err: any) => {
           this.isLoading.set(false);
           alert(err.error?.message || 'Erreur lors de la connexion');
         }

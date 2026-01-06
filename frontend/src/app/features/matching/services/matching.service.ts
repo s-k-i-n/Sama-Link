@@ -6,6 +6,13 @@ import { ToastService } from '../../../core/services/toast.service';
 import { catchError, map, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
+export interface UserPreferences {
+  minAge: number;
+  maxAge: number;
+  maxDistance: number;
+  genderPreference: 'male' | 'female' | 'all' | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -36,6 +43,19 @@ export class MatchingService {
         this.isLoadingSig.set(false);
       }
     });
+  }
+
+  getPreferences() {
+    return this.http.get<UserPreferences>(`${this.apiUrl}/preferences`);
+  }
+
+  updatePreferences(prefs: Partial<UserPreferences>) {
+    return this.http.put<UserPreferences>(`${this.apiUrl}/preferences`, prefs).pipe(
+      tap(() => {
+        this.toastService.success('Préférences mises à jour');
+        this.loadSuggestions(); // Reload suggestions with new filters
+      })
+    );
   }
 
   swipe(targetUserId: string, direction: 'like' | 'pass') {

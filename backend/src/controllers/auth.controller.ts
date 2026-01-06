@@ -7,6 +7,9 @@ import { authService } from '../services/auth.service';
 /**
  * Inscription d'un nouvel utilisateur
  */
+/**
+ * Inscription d'un nouvel utilisateur
+ */
 export const register = async (req: Request, res: Response) => {
   try {
     const validation = registerSchema.safeParse(req.body);
@@ -17,22 +20,23 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    const { email, password, username } = validation.data;
+    const { email, phone, password, username } = validation.data;
 
-    // Vérifier si l'utilisateur existe déjà
-    const existingUser = await authService.findByEmailOrUsername(email, username);
+    // Vérifier si l'utilisateur existe déjà (email, phone ou username)
+    const existingUser = await authService.findByEmailOrPhoneOrUsername(email, phone, username);
     if (existingUser) {
-      return res.status(400).json({ message: 'Email ou nom d\'utilisateur déjà utilisé.' });
+      if (existingUser.email === email && email) return res.status(400).json({ message: 'Email déjà utilisé.' });
+      if (existingUser.phone === phone && phone) return res.status(400).json({ message: 'Numéro de téléphone déjà utilisé.' });
+      if (existingUser.username === username) return res.status(400).json({ message: 'Nom d\'utilisateur déjà pris.' });
     }
 
     // Hashage du mot de passe
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const passwordHash = await authService.hashPassword(password);
 
     // Création de l'utilisateur
-    const user = await authService.register({ email, username, passwordHash });
+    const user = await authService.register({ email, phone, username, passwordHash });
 
-    logger.info(`Nouvel utilisateur inscrit : ${username} (${email})`);
+    logger.info(`Nouvel utilisateur inscrit : ${username} (${email || phone})`);
 
     // Génération du token JWT
     const token = authService.generateToken(user.id);
@@ -43,6 +47,7 @@ export const register = async (req: Request, res: Response) => {
       user: {
         id: user.id,
         email: user.email,
+        phone: user.phone,
         username: user.username
       }
     });
@@ -62,15 +67,16 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: validation.error.issues[0].message });
     }
 
-    const { email, password } = validation.data;
+    const { identifier, password } = validation.data;
 
-    const user = await authService.findByEmail(email);
+    // Recherche par email, téléphone ou username
+    const user = await authService.findByIdentifier(identifier);
     if (!user) {
       return res.status(401).json({ message: 'Identifiants invalides.' });
     }
 
     // Vérification du mot de passe
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await authService.verifyPassword(password, user.passwordHash);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Identifiants invalides.' });
     }
@@ -86,6 +92,7 @@ export const login = async (req: Request, res: Response) => {
       user: {
         id: user.id,
         email: user.email,
+        phone: user.phone,
         username: user.username,
         isPremium: user.isPremium
       }
