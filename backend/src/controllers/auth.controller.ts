@@ -94,7 +94,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         phone: user.phone,
         username: user.username,
-        isPremium: user.isPremium
+        isPremium: true // Forced for universal access
       }
     });
   } catch (error) {

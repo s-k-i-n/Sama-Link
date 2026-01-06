@@ -41,7 +41,12 @@ export const getProfile = async (req: Request, res: Response) => {
     // Transform user interests to flat array if needed
     const interests = user.interests.map(ui => ui.interest.name);
 
-    res.json({ ...user, interests });
+    res.json({ 
+      ...user, 
+      interests,
+      isPremium: true, // Forced for universal access
+      plan: 'PLATINUM' // Forced for universal access
+    });
   } catch (error) {
     logger.error('Error fetching profile:', error);
     res.status(500).json({ message: 'Erreur serveur' });

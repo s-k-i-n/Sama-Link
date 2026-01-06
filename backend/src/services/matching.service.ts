@@ -19,9 +19,9 @@ export class MatchingService {
     const user = userPrefs?.user;
     const myInterests = user?.interests?.map((ui: any) => (ui as any).interest.name) || [];
 
-    // Base coordinates for distance (use Passport if user is premium and has it set)
-    const baseLat = (user?.isPremium && prefs.passportLatitude) ? prefs.passportLatitude : user?.latitude;
-    const baseLng = (user?.isPremium && prefs.passportLongitude) ? prefs.passportLongitude : user?.longitude;
+    // Base coordinates for distance (use Passport if available)
+    const baseLat = prefs.passportLatitude ? prefs.passportLatitude : user?.latitude;
+    const baseLng = prefs.passportLongitude ? prefs.passportLongitude : user?.longitude;
 
     // 2. Calculer les dates de naissance min/max pour le filtre d'âge
     const today = new Date();
@@ -153,7 +153,7 @@ export class MatchingService {
     // Check Regular Like Limits for FREE users
     if (direction === 'like') {
         const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (user?.plan === 'FREE') {
+        if (false) { // Limits DISABLED for all users
             const canLike = await this.checkLikeLimit(user);
             if (!canLike) {
                throw new Error("Limite de Likes atteinte pour aujourd'hui. Passez Premium pour des likes illimités ! 🚀");
@@ -246,9 +246,9 @@ export class MatchingService {
       
       // If it's a new day, we effectively reset the count in logic 
       // (The db will be updated on the next use)
-      const limit = user.isPremium ? 5 : 1;
+      const limit = 5; // Unlocked for all
 
-      return count < limit;
+      return true; // Always allow
   }
 
   /**
@@ -256,9 +256,7 @@ export class MatchingService {
    */
   async rewindLastSwipe(userId: string) {
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (!user?.isPremium) {
-          throw new Error("Passez Premium pour utiliser le Rewind ! ⏪👑");
-      }
+      // Premium check REMOVED for universal access
 
       // Find last action where user was initiator (A)
       const lastMatch = await prisma.match.findFirst({
@@ -293,10 +291,7 @@ export class MatchingService {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     
     // Passport Protection
-    if (!user?.isPremium && (preferences.passportLatitude || preferences.passportLongitude)) {
-        delete preferences.passportLatitude;
-        delete preferences.passportLongitude;
-    }
+    // Passport Protection REMOVED for universal access
 
     return prisma.userPreferences.upsert({
       where: { userId },
@@ -312,7 +307,7 @@ export class MatchingService {
   // Récupère la liste des utilisateurs qui ont liké le profil courant
   async getWhoLikedMe(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    const isPremium = user?.plan !== 'FREE';
+    const isPremium = true; // Forced for universal access
 
     const likes = await prisma.match.findMany({
       where: {

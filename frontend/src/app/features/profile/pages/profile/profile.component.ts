@@ -126,8 +126,8 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
               </div>
            </div>
            
-           <!-- Premium Banner -->
-           <div *ngIf="!user().isPremium" class="relative group overflow-hidden bg-gradient-to-br from-amber-400 to-orange-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-amber-500/20 transform hover:scale-[1.02] transition-all duration-500 cursor-pointer" (click)="goToPremium()">
+           <!-- Premium Banner (Hidden for Universal Premium) -->
+           <div *ngIf="false && !user().isPremium" class="relative group overflow-hidden bg-gradient-to-br from-amber-400 to-orange-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-amber-500/20 transform hover:scale-[1.02] transition-all duration-500 cursor-pointer" (click)="goToPremium()">
               <div class="absolute top-0 right-0 p-4 opacity-30 drop-shadow-xl text-6xl">✨</div>
               <h3 class="text-2xl font-black mb-2 tracking-tighter">Accès Elite</h3>
               <p class="text-white/80 font-bold text-xs mb-6 max-w-[200px] leading-relaxed">

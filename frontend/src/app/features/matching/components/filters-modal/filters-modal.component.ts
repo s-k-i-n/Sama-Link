@@ -78,8 +78,8 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
             </div>
           </div>
 
-          <!-- Passport (Premium only) -->
-          <div *ngIf="user()?.isPremium" class="mb-8 p-4 bg-gold/5 rounded-2xl border border-gold/20">
+          <!-- Passport (Unlocked for Universal Premium) -->
+          <div *ngIf="true" class="mb-8 p-4 bg-gold/5 rounded-2xl border border-gold/20">
              <div class="flex items-center gap-2 mb-3">
                 <span class="text-lg">🌍</span>
                 <h3 class="text-sm font-black text-gold-dark uppercase tracking-tight">Mode Passeport</h3>
@@ -100,8 +100,8 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
              </div>
           </div>
 
-          <!-- Premium Upsell (if free) -->
-          <div *ngIf="!user()?.isPremium" (click)="goToPremium()" class="mb-8 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 cursor-pointer hover:bg-slate-100 transition-colors">
+          <!-- Premium Upsell (Hidden for Universal Premium) -->
+          <div *ngIf="false && !user()?.isPremium" (click)="goToPremium()" class="mb-8 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 cursor-pointer hover:bg-slate-100 transition-colors">
              <div class="flex items-center justify-between">
                 <div class="flex flex-col text-left">
                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Passeport</span>
