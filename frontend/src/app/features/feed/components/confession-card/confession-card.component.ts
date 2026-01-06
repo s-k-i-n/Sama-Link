@@ -12,144 +12,154 @@ import { TimeService } from '../../../../core/services/time.service';
 @Component({
   selector: 'app-confession-card',
   standalone: true,
-  imports: [CommonModule, SlCardComponent, FormsModule],
+  imports: [CommonModule, FormsModule],
   template: `
-    <sl-card class="mb-4 hover:border-sage/30 transition-colors relative">
-      <!-- Header -->
-      <div class="flex justify-between items-start mb-3">
-        <div class="flex items-center">
-          <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-lg mr-2">
-            🕵️
-          </div>
-          <div>
-            <span class="font-bold text-slate-700 block text-sm">{{ confession.authorAlias || 'Anonyme' }}</span>
-            <span class="text-xs text-slate-400">{{ confession.location }} • {{ confession.createdAt | date:'short' }}</span>
-          </div>
-        </div>
-        
-        <div class="relative">
-          <button (click)="toggleMenu()" class="text-slate-300 hover:text-night p-1 rounded-full hover:bg-slate-100 transition-colors">
-            <span class="sr-only">Options</span>
-            •••
-          </button>
-          
-          <!-- Dropdown Menu -->
-          <div *ngIf="isMenuOpen()" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 py-1 z-10 animate-in fade-in zoom-in-95 duration-200">
-             <!-- Actions Propriétaire -->
-             <ng-container *ngIf="isOwner()">
-               <button 
-                 *ngIf="canEdit()"
-                 (click)="startEdit()"
-                 class="w-full text-left px-4 py-2 text-sm text-sage hover:bg-sage/5 flex items-center gap-2 border-b border-slate-50">
-                 <span>✏️</span> Modifier
-               </button>
-               <button 
-                 (click)="onDelete()"
-                 class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-b border-slate-50">
-                 <span>🗑️</span> Supprimer
-               </button>
-             </ng-container>
+    <div class="mb-6 group bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-sage/5 hover:border-sage/20 transition-all duration-500 overflow-hidden relative">
+      <!-- Glow Effect on hover -->
+      <div class="absolute inset-0 bg-gradient-to-br from-sage/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
 
-             <button 
-               (click)="report()"
-               class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">
-               <span>⚠️</span> Signaler
-             </button>
-             <button class="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 flex items-center gap-2">
-               <span>🔗</span> Copier le lien
-             </button>
+      <div class="p-5 relative">
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-sage/10 flex items-center justify-center text-xl shadow-inner dark:bg-slate-800 transition-transform group-hover:rotate-6 duration-300">
+              🕵️
+            </div>
+            <div>
+              <span class="font-bold text-night dark:text-white block text-sm tracking-tight">{{ confession.authorAlias || 'Anonyme' }}</span>
+              <div class="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
+                <span class="px-1.5 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800">{{ confession.location }}</span>
+                <span>•</span>
+                <span>{{ confession.createdAt | date:'short' }}</span>
+              </div>
+            </div>
           </div>
-          <!-- Backdrop for menu -->
-          <div *ngIf="isMenuOpen()" (click)="toggleMenu()" class="fixed inset-0 z-0"></div>
-       </div>
-      </div>
+          
+          <div class="relative">
+            <button (click)="toggleMenu()" class="text-slate-300 hover:text-night dark:hover:text-white p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+              </svg>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div *ngIf="isMenuOpen()" class="absolute right-0 mt-2 w-48 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 py-2 z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+               <ng-container *ngIf="isOwner()">
+                 <button 
+                   *ngIf="canEdit()"
+                   (click)="startEdit()"
+                   class="w-full text-left px-4 py-2.5 text-xs font-bold text-sage hover:bg-sage/5 flex items-center gap-3 transition-colors">
+                   <span>✏️</span> Modifier
+                 </button>
+                 <button 
+                   (click)="onDelete()"
+                   class="w-full text-left px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-3 transition-colors">
+                   <span>🗑️</span> Supprimer
+                 </button>
+               </ng-container>
+
+               <button 
+                 (click)="report()"
+                 class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors">
+                 <span>⚠️</span> Signaler
+               </button>
+            </div>
+            <div *ngIf="isMenuOpen()" (click)="toggleMenu()" class="fixed inset-0 z-0"></div>
+         </div>
+        </div>
 
         <!-- Content -->
-        <p *ngIf="!isEditing()" class="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-4 whitespace-pre-wrap">
-          {{ confession.content }}
-        </p>
+        <div class="relative mb-5">
+          <p *ngIf="!isEditing()" class="text-night dark:text-slate-100 text-[15px] leading-[1.6] tracking-tight whitespace-pre-wrap font-medium">
+            {{ confession.content }}
+          </p>
 
-        <!-- Media / Photo -->
-        <div *ngIf="!isEditing() && confession.imageUrl" class="mb-4 -mx-2 rounded-xl overflow-hidden">
-          <img loading="lazy" 
-            [alt]="'Image de la confession: ' + confession.content.substring(0, 30)" 
-            [src]="confession.imageUrl" 
-            class="w-full h-auto object-contain max-h-[500px] bg-slate-50 dark:bg-slate-900">
-        </div>
-      
-      <ng-template #editMode>
-        <div class="mb-4">
-          <textarea 
-            [ngModel]="editedContent()" 
-            (ngModelChange)="editedContent.set($event)"
-            rows="3"
-            class="w-full p-2 border border-sage rounded-lg focus:ring-2 focus:ring-sage/20 outline-none text-night"
-            placeholder="Modifiez votre confession..."
-          ></textarea>
-          <div class="flex justify-end gap-2 mt-2">
-            <button (click)="cancelEdit()" class="text-xs text-slate-400 hover:text-slate-600">Annuler</button>
-            <button (click)="saveEdit()" [disabled]="!editedContent().trim() || editedContent() === confession.content" 
-                    class="bg-sage text-white px-3 py-1 rounded-full text-xs font-bold disabled:opacity-50">
-              Enregistrer
-            </button>
+          <div *ngIf="isEditing()" class="animate-in fade-in duration-300">
+            <textarea 
+              [ngModel]="editedContent()" 
+              (ngModelChange)="editedContent.set($event)"
+              rows="3"
+              class="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-sage/30 rounded-2xl focus:border-sage outline-none text-night dark:text-white text-sm transition-all duration-300 placeholder:text-slate-400"
+              placeholder="Modifiez votre confession..."
+            ></textarea>
+            <div class="flex justify-end gap-3 mt-3">
+              <button (click)="cancelEdit()" class="px-4 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">Annuler</button>
+              <button (click)="saveEdit()" [disabled]="!editedContent().trim() || editedContent() === confession.content" 
+                      class="bg-sage text-white px-5 py-1.5 rounded-full text-xs font-black shadow-lg shadow-sage/20 disabled:opacity-30 disabled:shadow-none transform active:scale-95 transition-all">
+                Mettre à jour
+              </button>
+            </div>
           </div>
         </div>
-      </ng-template>
 
-      <!-- Actions -->
-      <div class="flex items-center justify-between pt-3 border-t border-slate-50">
-        <div class="flex space-x-6">
-          <button 
-            (click)="onLike()" 
-            class="flex items-center space-x-1.5 transition-colors group"
-            [ngClass]="confession.isLiked ? 'text-red-500' : 'text-slate-500 hover:text-red-500'"
-          >
-            <span class="text-xl group-active:scale-125 transition-transform">
-              {{ confession.isLiked ? '❤️' : '🤍' }}
-            </span>
-            <span class="font-medium text-sm">{{ confession.likes }}</span>
-          </button>
-          
-          <button (click)="toggleComments()" class="flex items-center space-x-1.5 text-slate-500 hover:text-sage transition-colors">
-            <span class="text-xl">💬</span>
-            <span class="font-medium text-sm">{{ confession.commentsCount }}</span>
-          </button>
+        <!-- Media -->
+        <div *ngIf="!isEditing() && confession.imageUrl" class="mb-5 -mx-5 group/img relative overflow-hidden">
+          <div class="absolute inset-0 bg-night/5 group-hover/img:bg-transparent transition-colors duration-500 pointer-events-none"></div>
+          <img loading="lazy" 
+            [alt]="'Media content'" 
+            [src]="confession.imageUrl" 
+            class="w-full h-auto object-contain max-h-[500px] bg-slate-50 dark:bg-slate-800 group-hover/img:scale-[1.02] transition-transform duration-700">
         </div>
-        
-        <div *ngIf="isOwner() && canEdit()" class="text-[10px] text-slate-300 italic">
-          Modifiable pendant encore {{ editTimeRemaining() }}s
-        </div>
-      </div>
 
-      <!-- Comments Section -->
-      <div *ngIf="showComments()" class="mt-4 pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-2">
-         <div *ngIf="isLoadingComments()" class="text-center py-2 text-slate-400 text-xs">Chargement...</div>
-         
-         <div *ngFor="let comment of comments()" class="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 mb-2">
-            <strong>{{ comment.authorAlias }}:</strong> {{ comment.content }}
-         </div>
-         
-         <div *ngIf="!isLoadingComments() && comments().length === 0" class="text-center py-2 text-slate-400 text-xs">Aucun commentaire pour le moment.</div>
-         
-         <div class="flex gap-2 mt-3">
-            <input 
-              type="text" 
-              [ngModel]="newCommentContent()" 
-              (ngModelChange)="newCommentContent.set($event)"
-              (keyup.enter)="submitComment()"
-              placeholder="Ajouter un commentaire..." 
-              class="flex-grow bg-white border border-slate-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-sage"
-            >
+        <!-- Footer Actions -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800/50">
+          <div class="flex items-center gap-1">
             <button 
-              (click)="submitComment()"
-              [disabled]="!newCommentContent().trim()"
-              class="text-sage font-medium text-sm hover:underline disabled:opacity-50"
+              (click)="onLike()" 
+              class="group/like relative flex items-center justify-center w-10 h-10 rounded-2xl transition-all duration-300"
+              [ngClass]="confession.isLiked ? 'bg-red-50 dark:bg-red-500/10 text-red-500' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50'"
             >
-              Envoyer
+              <span class="text-xl transform group-active/like:scale-150 duration-200">
+                {{ confession.isLiked ? '❤️' : '🤍' }}
+              </span>
             </button>
-         </div>
+            <!-- Like Count -->
+             <span class="text-xs font-black text-slate-500 ml-1">{{ confession.likes }}</span>
+            
+            <button (click)="toggleComments()" class="ml-4 flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-sage hover:bg-sage/5 transition-all duration-300">
+              <span class="text-lg">💬</span>
+              <span class="text-xs font-black">{{ confession.commentsCount }}</span>
+            </button>
+          </div>
+          
+          <div *ngIf="isOwner() && canEdit()" class="text-[9px] font-black uppercase tracking-widest text-slate-300 dark:text-slate-600 animate-pulse">
+            {{ editTimeRemaining() }}s left
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div *ngIf="showComments()" class="mt-5 space-y-3 animate-in fade-in slide-in-from-top-4 duration-500">
+           <div *ngIf="isLoadingComments()" class="flex justify-center py-4">
+              <div class="w-5 h-5 border-2 border-sage border-t-transparent rounded-full animate-spin"></div>
+           </div>
+           
+           <div *ngFor="let comment of comments()" class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100/50 dark:border-slate-800/50">
+              <span class="font-black text-slate-900 dark:text-white mr-2">@{{ comment.authorAlias }}</span> 
+              {{ comment.content }}
+           </div>
+           
+           <div class="flex items-center gap-2 mt-4 bg-slate-50 dark:bg-slate-800 rounded-2xl p-2 pr-4 border border-slate-100 dark:border-slate-700/50">
+              <input 
+                type="text" 
+                [ngModel]="newCommentContent()" 
+                (ngModelChange)="newCommentContent.set($event)"
+                (keyup.enter)="submitComment()"
+                placeholder="Écrire un mot doux..." 
+                class="flex-grow bg-transparent border-none px-3 py-2 text-xs font-medium focus:outline-none dark:text-white placeholder:text-slate-400"
+              >
+              <button 
+                (click)="submitComment()"
+                [disabled]="!newCommentContent().trim()"
+                class="w-8 h-8 flex items-center justify-center bg-sage text-white rounded-xl shadow-lg shadow-sage/20 disabled:opacity-0 transition-all transform active:scale-90"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rotate-90" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                </svg>
+              </button>
+           </div>
+        </div>
       </div>
-    </sl-card>
+    </div>
   `
 })
 export class ConfessionCardComponent implements OnInit, OnDestroy {

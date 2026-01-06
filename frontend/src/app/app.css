@@ -83,25 +83,42 @@
   to { transform: rotate(0deg); }
 }
 
+/* Custom Interest Pills */
+.interest-pill {
+  @apply px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border border-transparent select-none;
+  @apply bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-800;
+}
+.interest-pill:hover {
+  @apply border-sage/30 text-sage scale-105;
+}
+.interest-pill.selected-interest {
+  @apply bg-sage text-white border-sage shadow-lg shadow-sage/20 scale-105;
+}
+
 /* Glassmorphism utility */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  @apply bg-white/70 dark:bg-night/70 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--ivory);
+  @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--sage);
-  border-radius: 10px;
+  @apply bg-sage/20 rounded-full transition-colors;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #6a7d71;
+  @apply bg-sage/40;
+}
+
+/* No Scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

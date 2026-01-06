@@ -14,86 +14,90 @@ import { Meta, Title } from '@angular/platform-browser';
   standalone: true,
   imports: [CommonModule, ConfessionCardComponent, CreateConfessionModalComponent, RouterLink],
   template: `
-    <div class="min-h-screen bg-ivory dark:bg-night transition-colors duration-300">
-      <!-- Top Bar -->
-      <div class="sticky top-0 z-30 bg-white/80 dark:bg-night/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div class="container mx-auto max-w-2xl px-4 py-3 flex justify-between items-center">
-          <h1 class="text-xl font-bold text-sage">Sama Link</h1>
-          <div class="flex gap-2 items-center">
-            
-            <!-- Dark Mode Toggle -->
-            <button (click)="toggleTheme()" class="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-              {{ profileService.settings().theme === 'light' ? '🌙' : '☀️' }}
+    <div class="min-h-screen bg-ivory dark:bg-night transition-colors duration-500">
+      <!-- Top Bar / Header -->
+      <header class="sticky top-0 z-30 bg-white/70 dark:bg-night/70 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/50">
+        <div class="container mx-auto max-w-2xl px-4 py-4 flex justify-between items-center">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-sage rounded-xl flex items-center justify-center shadow-lg shadow-sage/20">
+              <span class="text-white font-black text-xs">S</span>
+            </div>
+            <h1 class="text-xl font-black text-night dark:text-white tracking-tighter">Sama <span class="text-sage">Link</span></h1>
+          </div>
+          
+          <div class="flex gap-3 items-center">
+            <!-- Theme Toggle -->
+            <button (click)="toggleTheme()" class="w-10 h-10 flex items-center justify-center text-slate-400 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-all duration-300">
+              <span class="text-lg">{{ profileService.settings().theme === 'light' ? '🌙' : '☀️' }}</span>
             </button>
 
-            <!-- User Profile / Auth -->
+            <!-- User Profile -->
             <ng-container *ngIf="authService.isAuthenticated(); else guestView">
-              <button 
-                routerLink="/profile"
-                class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-100">
-                <img *ngIf="authService.currentUser()?.profilePhotoUrl" [src]="authService.currentUser()?.profilePhotoUrl" loading="lazy" [alt]="'Photo de ' + authService.currentUser()?.username" class="w-full h-full object-cover">
-              </button>
-              <button (click)="authService.logout()" class="text-xs text-slate-500 hover:text-red-500 font-medium ml-1">Quitter</button>
+              <div class="flex items-center gap-2 pl-2 border-l border-slate-100 dark:border-slate-800">
+                <button 
+                  routerLink="/profile"
+                  class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-700 shadow-sm hover:scale-110 active:scale-95 transition-all duration-300">
+                  <img *ngIf="authService.currentUser()?.avatarUrl" [src]="authService.currentUser()?.avatarUrl" loading="lazy" alt="Profile" class="w-full h-full object-cover">
+                  <div *ngIf="!authService.currentUser()?.avatarUrl" class="w-full h-full flex items-center justify-center text-xs font-bold text-slate-400">
+                    {{ authService.currentUser()?.username?.substring(0, 2)?.toUpperCase() }}
+                  </div>
+                </button>
+              </div>
             </ng-container>
 
             <ng-template #guestView>
-              <a routerLink="/auth/login" class="text-sm font-bold text-sage px-3 py-1 border border-sage rounded-full hover:bg-sage hover:text-white transition-all">
+              <a routerLink="/auth/login" class="text-xs font-black uppercase tracking-widest text-white bg-sage px-5 py-2.5 rounded-2xl shadow-lg shadow-sage/20 hover:scale-105 active:scale-95 transition-all">
                 Connexion
               </a>
             </ng-template>
           </div>
         </div>
-      </div>
+      </header>
 
       <!-- Feed Content -->
-      <main class="container mx-auto max-w-2xl px-4 py-6">
-        <!-- Create Trigger (Mobile friendly) -->
-        <div class="mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-3 cursor-pointer" (click)="openCreateModal()">
-           <div class="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0"></div>
-           <div class="text-slate-400 flex-grow bg-slate-50 rounded-full px-4 py-2 text-sm">
-             Partagez une confession anonyme...
+      <main class="container mx-auto max-w-2xl px-4 py-8">
+        <!-- Create Trigger -->
+        <div 
+          (click)="openCreateModal()"
+          class="mb-8 group bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 cursor-pointer hover:border-sage/30 hover:shadow-xl hover:shadow-sage/5 transition-all duration-500">
+           <div class="w-12 h-12 rounded-2xl bg-sage/10 dark:bg-slate-800 flex items-center justify-center text-xl transition-transform group-hover:rotate-12 duration-300">
+             ✨
+           </div>
+           <div class="text-slate-400 dark:text-slate-500 flex-grow bg-slate-50 dark:bg-slate-800/50 rounded-2xl px-5 py-3 text-sm font-medium border border-transparent group-hover:border-sage/10 transition-all">
+             Exprimez-vous anonymement...
            </div>
         </div>
 
-        <!-- Filters (Scrollable) -->
-        <div class="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
+        <!-- Filters -->
+        <div class="flex gap-3 overflow-x-auto pb-6 mb-2 no-scrollbar scroll-smooth">
           <button 
-            (click)="feedService.setFilter('recent')"
-            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-            [ngClass]="feedService.filterSig() === 'recent' ? 'bg-night text-white' : 'bg-white border border-slate-200 text-slate-600'">
-            Récents
-          </button>
-          <button 
-            (click)="feedService.setFilter('popular')"
-            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-            [ngClass]="feedService.filterSig() === 'popular' ? 'bg-amber text-white border-amber' : 'bg-white border border-slate-200 text-slate-600'">
-            Populaires 🔥
-          </button>
-          <button 
-            (click)="feedService.setFilter('nearby')"
-            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-            [ngClass]="feedService.filterSig() === 'nearby' ? 'bg-sage text-white border-sage' : 'bg-white border border-slate-200 text-slate-600'">
-            Proximité 📍
-          </button>
-          <button 
-            (click)="feedService.setFilter('mine')"
-            class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-            [ngClass]="feedService.filterSig() === 'mine' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600'">
-            Mes confessions
+            *ngFor="let filter of [
+              {id: 'recent', label: 'Récents', icon: '🕒'},
+              {id: 'popular', label: 'Populaires', icon: '🔥'},
+              {id: 'nearby', label: 'Proximité', icon: '📍'},
+              {id: 'mine', label: 'Les miennes', icon: '👤'}
+            ]"
+            (click)="changeFilter(filter.id)"
+            class="flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all duration-500 border"
+            [ngClass]="feedService.filterSig() === filter.id 
+              ? 'bg-sage text-white border-sage shadow-lg shadow-sage/20 scale-105' 
+              : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-sage/30 hover:text-sage'">
+            <span>{{ filter.icon }}</span>
+            {{ filter.label }}
           </button>
         </div>
         
         <!-- Bulk Actions -->
-        <div *ngIf="feedService.filterSig() === 'mine' && feedService.confessions().length > 0" class="mb-4 flex justify-end">
+        <div *ngIf="feedService.filterSig() === 'mine' && feedService.confessions().length > 0" class="mb-6 flex justify-end">
           <button 
             (click)="confirmDeleteAll()"
-            class="text-xs text-red-500 hover:text-red-700 font-medium border border-red-200 px-3 py-1 rounded-full hover:bg-red-50 transition-colors">
-            🗑️ Supprimer toutes mes confessions
+            class="text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 px-4 py-2 rounded-xl transition-all border border-red-100 dark:border-red-500/20">
+            🗑️ Tout supprimer
           </button>
         </div>
  
          <!-- List / Empty State -->
-         <div class="space-y-4">
+         <div class="space-y-6">
             <app-confession-card 
               *ngFor="let confession of feedService.confessions()" 
               [confession]="confession"
@@ -101,33 +105,34 @@ import { Meta, Title } from '@angular/platform-browser';
             ></app-confession-card>
             
             <!-- Empty State -->
-            <div *ngIf="!feedService.isLoading() && feedService.confessions().length === 0" class="py-20 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-               <div class="text-6xl mb-4">🍃</div>
-               <h3 class="text-lg font-bold text-slate-400 mb-2">Presque trop calme ici...</h3>
-               <p class="text-sm text-slate-400 px-6">
+            <div *ngIf="!feedService.isLoading() && feedService.confessions().length === 0" class="py-24 text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
+               <div class="text-7xl mb-6 grayscale opacity-50">🍃</div>
+               <h3 class="text-2xl font-black text-night dark:text-white mb-3 tracking-tighter">Silencio...</h3>
+               <p class="text-sm text-slate-400 dark:text-slate-500 px-12 leading-relaxed font-medium">
                  {{ feedService.filterSig() === 'mine' 
-                    ? "Vous n'avez pas encore publié de confession ou vous venez de tout supprimer." 
-                    : "Aucune confession ne correspond à ce filtre pour le moment." }}
+                    ? "C'est le moment idéal pour partager votre premier secret en toute sécurité." 
+                    : "Aucune confession trouvée ici. Soyez le premier à briser le silence !" }}
                </p>
                <button 
                  *ngIf="feedService.filterSig() !== 'recent'"
                  (click)="feedService.setFilter('recent')"
-                 class="mt-6 text-sage font-bold hover:underline">
-                 Retourner au flux récent
+                 class="mt-8 text-sage font-black uppercase tracking-widest text-xs hover:underline underline-offset-8">
+                 Retourner à la source
                </button>
             </div>
          </div>
 
         <!-- Infinite Scroll Trigger -->
-        <div class="py-8 text-center text-slate-400 text-sm">
-           Chargement plus de confessions...
+        <div class="py-12 flex flex-col items-center gap-3">
+           <div class="w-6 h-6 border-2 border-sage/20 border-t-sage rounded-full animate-spin"></div>
+           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 animate-pulse">Chargement universel...</span>
         </div>
       </main>
 
-      <!-- Floating Action Button (Mobile) -->
+      <!-- FAB (Mobile) -->
       <button 
         (click)="openCreateModal()"
-        class="fixed bottom-6 right-6 w-14 h-14 bg-sage text-white rounded-full shadow-lg flex items-center justify-center text-3xl transition-transform hover:scale-110 active:scale-95 z-40 md:hidden">
+        class="fixed bottom-24 right-6 w-16 h-16 bg-sage text-white rounded-[2rem] shadow-2xl shadow-sage/40 flex items-center justify-center text-4xl transition-all hover:scale-110 hover:-rotate-12 active:scale-90 z-40 md:hidden border-4 border-white dark:border-night">
         +
       </button>
 
@@ -144,6 +149,10 @@ export class FeedComponent implements OnInit {
   private meta = inject(Meta);
   
   @ViewChild('createModal') createModal!: CreateConfessionModalComponent;
+
+  changeFilter(filterId: string) {
+    this.feedService.setFilter(filterId as any);
+  }
 
   ngOnInit() {
     this.title.setTitle('Flux Confessions | Découvrez les secrets de votre communauté au Sénégal');

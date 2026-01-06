@@ -3,6 +3,8 @@ export interface User {
   username: string;
   email?: string;
   phone?: string;
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  verificationImage?: string;
   age?: number;
   birthDate?: string;
   gender: 'male' | 'female' | 'other' | string;
