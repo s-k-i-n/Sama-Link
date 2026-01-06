@@ -22,6 +22,9 @@ model User {
   longitude        Float?
   lastBoostAt      DateTime?    @map("last_boost_at")
   lastSuperLikeAt  DateTime?    @map("last_super_like_at")
+  lastLikeAt       DateTime?    @map("last_like_at")
+  dailyLikeCount   Int          @default(0) @map("daily_like_count")
+
   isVerified       Boolean      @default(false) @map("is_verified")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
@@ -33,6 +36,7 @@ model User {
   sentMessages     Message[]    @relation("SentMessages")
   reactions        Reaction[]
   preferences      UserPreferences?
+  subscriptions    Subscription[] @relation("UserSubscriptions") // History
   
   // Enhanced Profile Fields
   photos           String[]
@@ -51,6 +55,19 @@ model User {
   interests        UserInterest[]
 
   @@index([phone])
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  plan      String   // GOLD, PLATINUM
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+  status    String   // ACTIVE, EXPIRED, CANCELLED
+  provider  String   // STRIPE, WAVE, MANUAL
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation("UserSubscriptions", fields: [userId], references: [id])
 }
 
 model UserPreferences {

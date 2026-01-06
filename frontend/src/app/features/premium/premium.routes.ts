@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
-import { PricingComponent } from './pages/pricing/pricing.component';
 
 export const PREMIUM_ROUTES: Routes = [
-  { path: '', component: PricingComponent }
+  {
+    path: '',
+    loadComponent: () => import('./pages/premium/premium.ts').then(m => m.PremiumComponent)
+  }
 ];

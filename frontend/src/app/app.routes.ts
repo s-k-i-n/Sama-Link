@@ -41,6 +41,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'likes-me',
+    loadChildren: () => import('./features/likes/likes.routes').then(m => m.LIKES_ROUTES),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

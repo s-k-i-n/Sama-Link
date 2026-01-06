@@ -17,4 +17,7 @@ router.put('/preferences', matchingController.updatePreferences);
 // Routes Rewind
 router.post('/rewind', matchingController.rewind);
 
+// Routes Who Liked Me
+router.get('/who-liked-me', matchingController.getWhoLikedMe);
+
 export default router;

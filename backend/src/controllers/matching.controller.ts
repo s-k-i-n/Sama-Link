@@ -68,9 +68,6 @@ export const updatePreferences = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Annule le dernier swipe (Rewind)
- */
 export const rewind = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).userId;
@@ -79,5 +76,41 @@ export const rewind = async (req: Request, res: Response) => {
     } catch (error: any) {
         logger.error('Erreur rewind:', error);
         res.status(400).json({ message: error.message || "Impossible d'annuler la dernière action." });
+    }
+};
+
+/**
+ * Récupère les personnes qui ont liké le profil (Gating Premium)
+ */
+export const getWhoLikedMe = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        
+        // Check Premium Status
+        // We could optimize by having isPremium in the token, but db check is safer
+        const user = await import('../lib/prisma').then(m => m.default.user.findUnique({
+             where: { id: userId }, select: { isPremium: true }
+        }));
+        
+        const isPremium = user?.isPremium || false;
+        const likes = await matchingService.getWhoLikedMe(userId);
+
+        if (isPremium) {
+            res.json(likes);
+        } else {
+            // Obfuscate data for free users
+            const blurred = likes.map(l => ({
+                id: 'HIDDEN', // Hide ID so they can't hack it
+                username: 'Quelqu\'un',
+                age: l.birthDate ? new Date().getFullYear() - l.birthDate.getFullYear() : '??',
+                avatarUrl: 'assets/images/blur-placeholder.jpg', // Frontend handle blur or just show this
+                isBlurred: true
+            }));
+            res.json(blurred);
+        }
+
+    } catch(error) {
+        logger.error('Erreur getWhoLikedMe:', error);
+        res.status(500).json({ message: "Erreur lors de la récupération des likes." });
     }
 };

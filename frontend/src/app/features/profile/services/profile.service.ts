@@ -48,6 +48,17 @@ export class ProfileService {
         })
     ).subscribe();
   }
+
+  checkSubscription() {
+    this.http.get<{ isPremium: boolean, subscription: any }>(`${environment.apiUrl}/subscription/status`).subscribe({
+      next: (res) => {
+        const currentUser = this.authService.currentUser();
+        if (currentUser && currentUser.isPremium !== res.isPremium) {
+           this.authService.currentUser.set({ ...currentUser, isPremium: res.isPremium });
+        }
+      }
+    });
+  }
   
   getInterests() {
     return this.http.get<Record<string, Interest[]>>(`${environment.apiUrl}/profile/interests`);

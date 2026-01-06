@@ -102,6 +102,9 @@ app.use('/api/messaging', messagingRoutes);
 console.log("Routes Messaging enregistrées");
 app.use('/api/profile', profileRoutes);
 console.log("Routes Profile enregistrées");
+import subscriptionRoutes from './routes/subscription.routes';
+app.use('/api/subscription', subscriptionRoutes);
+console.log("Routes Subscription enregistrées");
 
 // Route de base pour vérifier que le serveur tourne
 app.get("/", (req, res) => {

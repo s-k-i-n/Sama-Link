@@ -206,6 +206,37 @@ export class MatchingService {
   async getPreferences(userId: string) {
     return prisma.userPreferences.findUnique({ where: { userId } });
   }
+
+  /**
+   * Récupère la liste des utilisateurs qui ont liké le profil courant
+   */
+  async getWhoLikedMe(userId: string) {
+      // Check if user is Premium to decide if we blur/hide data
+      // For now, service returns raw data, Controller handles gating modification?
+      // Better to handle it here or in controller. 
+      // Let's return the list, and let controller or service modify based on premium status.
+      
+      const likes = await prisma.match.findMany({
+          where: {
+              userBId: userId,
+              status: 'pending' // pending means they liked us, but we haven't responded yet
+          },
+          include: {
+              userA: {
+                  select: {
+                      id: true,
+                      username: true,
+                      avatarUrl: true, // We might need to blur this on frontend or return placeholder
+                      birthDate: true,
+                      isPremium: true
+                  }
+              }
+          },
+          orderBy: { createdAt: 'desc' }
+      });
+
+      return likes.map(match => match.userA);
+  }
 }
 
 export const matchingService = new MatchingService();
