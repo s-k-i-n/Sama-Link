@@ -99,6 +99,20 @@ export class MessagingService {
       },
     });
   }
+
+  /**
+   * Marque tous les messages d'une conversation comme lus pour un utilisateur spécifique
+   */
+  async markAsRead(conversationId: string, userId: string) {
+    return prisma.message.updateMany({
+      where: {
+        conversationId,
+        receiverId: userId,
+        readAt: null,
+      },
+      data: { readAt: new Date() },
+    });
+  }
 }
 
 export const messagingService = new MessagingService();

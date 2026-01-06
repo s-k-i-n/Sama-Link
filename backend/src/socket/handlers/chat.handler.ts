@@ -52,12 +52,16 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
 
   // Marquer comme lu (Read Receipt)
   socket.on("read_message", async (data: { conversationId: string, userId: string }) => {
-      // Broadcast to room that user read messages
-      // We could also update DB here if not done via API
-      socket.to(data.conversationId).emit("messages_read", {
-          conversationId: data.conversationId,
-          readByUserId: data.userId,
-          readAt: new Date()
-      });
+      try {
+          await messagingService.markAsRead(data.conversationId, data.userId);
+          
+          socket.to(data.conversationId).emit("messages_read", {
+              conversationId: data.conversationId,
+              readByUserId: data.userId,
+              readAt: new Date()
+          });
+      } catch (err) {
+          logger.error('Erreur Socket read_message:', err);
+      }
   });
 };
