@@ -17,8 +17,12 @@ import { FiltersModalComponent } from '../../components/filters-modal/filters-mo
   template: `
     <div class="min-h-screen bg-ivory dark:bg-night flex flex-col transition-colors duration-500">
       <header class="sticky top-0 z-30 bg-white/70 dark:bg-night/70 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/50 px-4 py-3 flex justify-between items-center transition-colors duration-500">
-        <a routerLink="/feed" class="hover:scale-105 transition-transform">
-          <img src="images/logo.png" alt="Sama Link Logo" class="h-8 object-contain">
+        <a routerLink="/feed" class="flex items-center gap-2 hover:scale-[1.02] transition-transform">
+          <div class="w-8 h-8 bg-sage rounded-xl flex items-center justify-center shadow-lg shadow-sage/20 text-white font-black text-sm">s</div>
+          <h1 class="text-xl font-black flex items-center tracking-tighter">
+            <span class="text-night dark:text-white">Sama</span>
+            <span class="text-sage ml-1">Link</span>
+          </h1>
         </a>
         
         <div class="flex items-center gap-2">

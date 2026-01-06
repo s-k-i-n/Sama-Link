@@ -23,8 +23,8 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
             </svg>
          </button>
 
-         <div class="absolute top-6 left-1/2 -translate-x-1/2 z-10 opacity-50 contrast-125">
-            <img src="images/logo.png" alt="Sama Link" class="w-8 h-8 object-contain">
+         <div class="absolute top-6 left-1/2 -translate-x-1/2 z-10 opacity-60">
+            <div class="w-8 h-8 bg-sage rounded-xl flex items-center justify-center shadow-lg shadow-sage/20 text-white font-black text-sm">s</div>
          </div>
 
          <button (click)="goToSettings()" class="absolute top-6 right-6 w-10 h-10 bg-white/10 backdrop-blur-md text-white border border-white/10 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all z-10" title="Paramètres">

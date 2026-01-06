@@ -19,7 +19,11 @@ import { Meta, Title } from '@angular/platform-browser';
       <header class="sticky top-0 z-30 bg-white/70 dark:bg-night/70 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/50">
         <div class="container mx-auto max-w-2xl px-4 py-4 flex justify-between items-center">
           <div class="flex items-center gap-2">
-            <img src="images/logo.png" alt="Sama Link Logo" class="h-8 object-contain">
+            <div class="w-8 h-8 bg-sage rounded-xl flex items-center justify-center shadow-lg shadow-sage/20 text-white font-black text-sm">s</div>
+            <h1 class="text-xl font-black flex items-center tracking-tighter">
+              <span class="text-night dark:text-white">Sama</span>
+              <span class="text-sage ml-1">Link</span>
+            </h1>
           </div>
           
           <div class="flex gap-3 items-center">
