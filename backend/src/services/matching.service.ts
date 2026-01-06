@@ -237,6 +237,52 @@ export class MatchingService {
 
       return likes.map(match => match.userA);
   }
+
+  /**
+   * Génère des brise-glace (Icebreakers) pour une conversation
+   */
+  async getIcebreakers(currentUserId: string, otherUserId: string) {
+      const [currentUser, otherUser] = await Promise.all([
+          prisma.user.findUnique({ where: { id: currentUserId }, include: { interests: { include: { interest: true } } } }),
+          prisma.user.findUnique({ where: { id: otherUserId }, include: { interests: { include: { interest: true } } } })
+      ]);
+
+      if (!currentUser || !otherUser) return [];
+
+      const icebreakers = [
+          "Salut ! Comment se passe ta journée ?",
+          "J'aime beaucoup ta photo de profil !"
+      ];
+
+      // 1. Common Interests
+      const myInterests = (currentUser as any).interests.map((i: any) => i.interest.name);
+      const theirInterests = (otherUser as any).interests.map((i: any) => i.interest.name);
+      const common = myInterests.filter((i: any) => theirInterests.includes(i));
+
+      if (common.length > 0) {
+          icebreakers.push(`Je vois qu'on aime tous les deux ${common[0]} ! C'est ta passion ?`);
+          if (common.length > 1) icebreakers.push(`On a ${common.length} points communs, y compris ${common[1]}.`);
+      }
+
+      // 2. Profile Details
+      if (otherUser.jobTitle) {
+          icebreakers.push(`Tu travailles comme ${otherUser.jobTitle} ? Ça doit être passionnant !`);
+      }
+      if (otherUser.school && currentUser.school === otherUser.school) {
+          icebreakers.push(`Hey, on a fait la même école (${otherUser.school}) !`);
+      }
+
+      // Random fun
+      const funQuestions = [
+          "Si tu pouvais voyager n'importe où, tu irais où ?",
+          "Pizza ou Burger ?",
+          "Quelle est ta série du moment ?"
+      ];
+      icebreakers.push(funQuestions[Math.floor(Math.random() * funQuestions.length)]);
+
+      // Shuffle and pick 3
+      return icebreakers.sort(() => 0.5 - Math.random()).slice(0, 3);
+  }
 }
 
 export const matchingService = new MatchingService();

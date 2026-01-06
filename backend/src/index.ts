@@ -17,24 +17,7 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
-// Configuration du logger (Base pour ELK)
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.json(),
-  defaultMeta: { service: "sama-link-backend" },
-  transports: [
-    new winston.transports.File({ filename: "error.log", level: "error" }),
-    new winston.transports.File({ filename: "combined.log" }),
-  ],
-});
-
-if (process.env.NODE_ENV !== "production") {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.simple(),
-    })
-  );
-}
+import logger from "./utils/logger";
 
 // Socket.io pour les fonctionnalités temps réel
 const io = new Server(httpServer, {
@@ -105,6 +88,14 @@ console.log("Routes Profile enregistrées");
 import subscriptionRoutes from './routes/subscription.routes';
 app.use('/api/subscription', subscriptionRoutes);
 console.log("Routes Subscription enregistrées");
+
+import adminRoutes from './routes/admin.routes';
+app.use('/api/admin', adminRoutes);
+console.log("Routes Admin enregistrées");
+
+import moderationRoutes from './routes/moderation.routes';
+app.use('/api/moderation', moderationRoutes);
+console.log("Routes Moderation enregistrées");
 
 // Route de base pour vérifier que le serveur tourne
 app.get("/", (req, res) => {

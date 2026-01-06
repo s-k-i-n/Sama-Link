@@ -114,6 +114,10 @@ export class ChatService implements OnDestroy {
       return this.http.post<{ url: string, type: string, metadata: any }>(`${this.apiUrl}/upload`, formData);
   }
 
+  getIcebreakers(targetUserId: string) {
+      return this.http.get<string[]>(`${this.apiUrl}/icebreakers/${targetUserId}`);
+  }
+
   sendMessage(content: string, type: string = 'TEXT', metadata: any = {}) {
     const activeId = this.activeChatIdSig();
     const user = this.authService.currentUser();

@@ -46,6 +46,23 @@ import { AudioPlayerComponent } from '../../../../shared/components/audio-player
 
       <!-- Messages Area -->
       <div class="flex-grow overflow-y-auto p-4 space-y-4" #scrollContainer>
+         <!-- Empty State & Icebreakers -->
+         <div *ngIf="activeChat()?.messages?.length === 0" class="flex flex-col h-full items-center justify-center text-center opacity-80">
+            <div class="text-4xl mb-2">👋</div>
+            <p class="text-slate-500 mb-6">Dites bonjour à {{ activeChat()?.userAlias }} !</p>
+            
+            <div *ngIf="isLoadingIcebreakers()" class="text-sm text-slate-400">Chargement des idées...</div>
+            
+            <div *ngIf="icebreakers().length > 0" class="flex flex-wrap gap-2 justify-center max-w-sm px-4">
+                <button 
+                  *ngFor="let idea of icebreakers()" 
+                  (click)="useIcebreaker(idea)"
+                  class="bg-white border border-slate-200 text-slate-600 text-xs px-3 py-2 rounded-full hover:bg-sage hover:text-white hover:border-transparent transition-all shadow-sm">
+                  {{ idea }}
+                </button>
+            </div>
+         </div>
+         
          <ng-container *ngFor="let msg of activeChat()?.messages">
            <div class="flex" [ngClass]="msg.senderId === authService.currentUser()?.id ? 'justify-end' : 'justify-start'">
               <div 
@@ -150,14 +167,44 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   mediaRecorder: MediaRecorder | null = null;
   audioChunks: Blob[] = [];
   timerInterval: any;
+  
+  // Icebreakers
+  icebreakers = signal<string[]>([]);
+  isLoadingIcebreakers = signal(false);
 
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
   ngOnInit() {
     this.route.params.subscribe(params => {
        const id = params['id'];
-       if (id) this.chatService.setActiveChat(id);
+       if (id) {
+         this.chatService.setActiveChat(id);
+         this.checkIcebreakers(id);
+       }
     });
+  }
+
+  checkIcebreakers(conversationId: string) {
+      // If no messages, fetch suggestions
+      const chat = this.chatService.conversations().find(c => c.id === conversationId);
+      if (chat && chat.messages.length === 0) {
+          this.isLoadingIcebreakers.set(true);
+          // Need target user Id from chat object
+          this.chatService.getIcebreakers(chat.userId).subscribe({
+              next: (suggestions) => {
+                  this.icebreakers.set(suggestions);
+                  this.isLoadingIcebreakers.set(false);
+              },
+              error: () => this.isLoadingIcebreakers.set(false)
+          });
+      } else {
+          this.icebreakers.set([]);
+      }
+  }
+  
+  useIcebreaker(text: string) {
+      this.newMessage = text;
+      // Optional: Auto send or just fill? Let's just fill for safety
   }
 
   ngAfterViewChecked() {

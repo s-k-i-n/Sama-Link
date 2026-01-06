@@ -10,5 +10,6 @@ router.use(authenticate);
 router.get('/conversations', messagingController.getConversations);
 router.get('/messages/:conversationId', messagingController.getMessages);
 router.post('/upload', upload.single('file'), messagingController.uploadMedia);
+router.get('/icebreakers/:targetUserId', messagingController.getIcebreakers);
 
 export default router;

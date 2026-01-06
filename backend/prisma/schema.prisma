@@ -42,6 +42,10 @@ model User {
   isOnline         Boolean      @default(false) @map("is_online")
   lastSeen         DateTime     @default(now()) @map("last_seen")
   
+  // Verification
+  verificationStatus String   @default("NONE") @map("verification_status") // NONE, PENDING, VERIFIED, REJECTED
+  verificationImage  String?  @map("verification_image")
+
   // Enhanced Profile Fields
   photos           String[]
   height           Int?
@@ -58,7 +62,37 @@ model User {
   
   interests        UserInterest[]
 
+  // Moderation Relations
+  reportsMade      Report[]     @relation("MyReports")
+  reportsReceived  Report[]     @relation("ReportsAgainstMe")
+  blocksMade       Block[]      @relation("MyBlocks")
+  blockedBy        Block[]      @relation("BlockedByMe")
+
   @@index([phone])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  reporterId String   @map("reporter_id")
+  reportedId String   @map("reported_id")
+  reason     String
+  status     String   @default("PENDING") // PENDING, REVIEWED, RESOLVED
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  reporter   User     @relation("MyReports", fields: [reporterId], references: [id])
+  reported   User     @relation("ReportsAgainstMe", fields: [reportedId], references: [id])
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker   User     @relation("MyBlocks", fields: [blockerId], references: [id])
+  blocked   User     @relation("BlockedByMe", fields: [blockedId], references: [id])
+
+  @@unique([blockerId, blockedId])
 }
 
 model Subscription {

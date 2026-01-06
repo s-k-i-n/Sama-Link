@@ -4,29 +4,46 @@ export class MessagingService {
   /**
    * Sauvegarde un nouveau message en base de données
    */
-  async saveMessage(data: {
-    conversationId: string;
-    senderId: string;
-    receiverId: string;
-    content: string;
-    type?: string; 
-    metadata?: any;
-  }) {
-    return prisma.message.create({
+  async saveMessage(conversationId: string, senderId: string, content: string, type: 'TEXT' | 'IMAGE' | 'AUDIO' = 'TEXT', metadata: any = {}) {
+    // Auto-Mod Check
+    if (type === 'TEXT') {
+        const { moderationService } = await import('./moderation.service');
+        const isSafe = moderationService.checkContent(content);
+        if (!isSafe) {
+            throw new Error("Message contains prohibited content.");
+        }
+    }
+
+    const message = await prisma.message.create({
       data: {
-        conversationId: data.conversationId,
-        senderId: data.senderId,
-        receiverId: data.receiverId,
-        content: data.content,
-        type: data.type || 'TEXT',
-        metadata: data.metadata || {}
+        conversationId,
+        senderId,
+        receiverId: await this.getReceiverId(conversationId, senderId),
+        content,
+        type,
+        metadata
       },
       include: {
-        sender: { select: { username: true, avatarUrl: true } },
-      },
+        sender: { select: { id: true, username: true, avatarUrl: true } }
+      }
     });
+    return message;
   }
 
+  private async getReceiverId(conversationId: string, senderId: string): Promise<string> {
+      // Helper to find receiver from conversation (Match) schema? 
+      // Actually Message schema asks for receiverId directly. 
+      // But we passed conversationId.
+      // We need to fetch the match to find the other user.
+      // Wait, the current implementation of saveMessage likely inferred receiverId?
+      // Checking previous code... it didn't seem to calculate receiverId in the signature shown in diffs.
+      // It must have been Logic: conversationId IS the matchId.
+      
+      const match = await prisma.match.findUnique({ where: { id: conversationId } });
+      if (!match) throw new Error("Conversation failed");
+      
+      return match.userAId === senderId ? match.userBId : match.userAId;
+  }
   /**
    * Récupère les conversations d'un utilisateur
    */

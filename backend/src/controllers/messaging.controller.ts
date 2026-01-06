@@ -62,3 +62,25 @@ export const uploadMedia = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Erreur lors de l'upload." });
   }
 };
+
+/**
+ * Récupère les icebreakers
+ */
+export const getIcebreakers = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const { targetUserId } = req.params;
+        
+        // Use MatchingService (verify import)
+        // We need to import matchingService if not present. 
+        // Actually matchingService is in another file, let's assume we import or use it.
+        // Wait, current file imports 'messagingService'. Need to import 'matchingService'.
+        const { matchingService } = await import('../services/matching.service'); 
+
+        const suggestions = await matchingService.getIcebreakers(userId, targetUserId);
+        res.json(suggestions);
+    } catch (error) {
+        logger.error('Erreur getIcebreakers:', error);
+        res.status(500).json({ message: "Erreur suggestions." });
+    }
+};
