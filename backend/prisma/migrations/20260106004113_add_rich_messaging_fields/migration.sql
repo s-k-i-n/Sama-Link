@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Message" ADD COLUMN     "metadata" JSONB,
+ADD COLUMN     "type" TEXT NOT NULL DEFAULT 'TEXT';
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "is_online" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "last_seen" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

@@ -30,3 +30,35 @@ export const getMessages = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Erreur lors de la récupération des messages.' });
   }
 };
+
+/**
+ * Upload de média (Image ou Audio) pour le chat
+ */
+export const uploadMedia = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Aucun fichier fourni.' });
+    }
+
+    // Return URL
+    const fileUrl = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`;
+    
+    // Suggest type based on mimetype
+    const type = req.file.mimetype.startsWith('audio') ? 'AUDIO' : 'IMAGE';
+    const metadata = {
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        filename: req.file.filename
+    };
+
+    res.json({ 
+        url: fileUrl, 
+        type, 
+        metadata 
+    });
+
+  } catch (error) {
+    logger.error('Erreur uploadMedia:', error);
+    res.status(500).json({ message: "Erreur lors de l'upload." });
+  }
+};

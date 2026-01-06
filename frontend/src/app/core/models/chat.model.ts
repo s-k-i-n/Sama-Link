@@ -2,6 +2,8 @@ export interface Message {
   id: string;
   senderId: string;
   content: string;
+  type?: 'TEXT' | 'IMAGE' | 'AUDIO';
+  metadata?: any;
   timestamp: Date;
   isRead: boolean;
 }

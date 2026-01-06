@@ -20,7 +20,9 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
     conversationId: string, 
     senderId: string, 
     receiverId: string, 
-    content: string 
+    content: string,
+    type?: string,
+    metadata?: any
   }) => {
     try {
       const message = await messagingService.saveMessage(data);
@@ -40,5 +42,16 @@ export const registerChatHandlers = (io: Server, socket: Socket) => {
       username: data.username,
       isTyping: data.isTyping
     });
+  });
+
+  // Marquer comme lu (Read Receipt)
+  socket.on("read_message", async (data: { conversationId: string, userId: string }) => {
+      // Broadcast to room that user read messages
+      // We could also update DB here if not done via API
+      socket.to(data.conversationId).emit("messages_read", {
+          conversationId: data.conversationId,
+          readByUserId: data.userId,
+          readAt: new Date()
+      });
   });
 };

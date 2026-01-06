@@ -108,7 +108,13 @@ export class ChatService implements OnDestroy {
     });
   }
 
-  sendMessage(content: string) {
+  uploadMedia(file: File) {
+      const formData = new FormData();
+      formData.append('file', file);
+      return this.http.post<{ url: string, type: string, metadata: any }>(`${this.apiUrl}/upload`, formData);
+  }
+
+  sendMessage(content: string, type: string = 'TEXT', metadata: any = {}) {
     const activeId = this.activeChatIdSig();
     const user = this.authService.currentUser();
     const activeChat = this.activeChat();
@@ -119,7 +125,9 @@ export class ChatService implements OnDestroy {
       conversationId: activeId,
       senderId: user.id,
       receiverId: activeChat.userId,
-      content
+      content,
+      type,
+      metadata
     };
 
     this.socket.emit('send_message', messageData);
@@ -145,6 +153,8 @@ export class ChatService implements OnDestroy {
             id: msg.id,
             senderId: msg.senderId,
             content: msg.content,
+            type: msg.type,
+            metadata: msg.metadata,
             timestamp: new Date(msg.createdAt),
             isRead: !!msg.readAt
           };

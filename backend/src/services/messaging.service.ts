@@ -9,6 +9,8 @@ export class MessagingService {
     senderId: string;
     receiverId: string;
     content: string;
+    type?: string; 
+    metadata?: any;
   }) {
     return prisma.message.create({
       data: {
@@ -16,9 +18,11 @@ export class MessagingService {
         senderId: data.senderId,
         receiverId: data.receiverId,
         content: data.content,
+        type: data.type || 'TEXT',
+        metadata: data.metadata || {}
       },
       include: {
-        sender: { select: { username: true } },
+        sender: { select: { username: true, avatarUrl: true } },
       },
     });
   }
