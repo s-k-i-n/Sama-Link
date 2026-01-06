@@ -1,20 +1,22 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
 
 @Component({
   selector: 'app-conversation-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
-    <div class="min-h-screen bg-ivory">
+    <div class="min-h-screen bg-ivory dark:bg-night transition-colors duration-500">
       <!-- Header -->
-      <div class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center sticky top-0 z-20">
-        <button routerLink="/feed" class="text-xl font-bold text-sage hover:scale-105 transition-transform">Sama Link</button>
-        <h1 class="text-sm font-bold text-night uppercase tracking-wider">Messages</h1>
+      <header class="sticky top-0 z-30 bg-white/70 dark:bg-night/70 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/50 px-4 py-3 flex justify-between items-center transition-colors duration-500">
+        <a routerLink="/feed" class="hover:scale-105 transition-transform">
+          <img src="images/logo.png" alt="Sama Link Logo" class="h-8 object-contain">
+        </a>
+        <h1 class="text-xs font-black text-night dark:text-white uppercase tracking-[0.2em]">Messages</h1>
         <div class="w-10"></div> <!-- Balance -->
-      </div>
+      </header>
 
       <!-- List -->
       <div class="divide-y divide-slate-100">

@@ -15,10 +15,11 @@ import { FiltersModalComponent } from '../../components/filters-modal/filters-mo
   standalone: true,
   imports: [CommonModule, SwipeCardComponent, MatchModalComponent, RouterLink, FiltersModalComponent],
   template: `
-    <div class="min-h-screen bg-ivory flex flex-col">
-      <!-- Header -->
-      <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center sticky top-0 z-20">
-        <button routerLink="/feed" class="text-sage font-bold text-xl hover:scale-105 transition-transform">Sama Link</button>
+    <div class="min-h-screen bg-ivory dark:bg-night flex flex-col transition-colors duration-500">
+      <header class="sticky top-0 z-30 bg-white/70 dark:bg-night/70 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/50 px-4 py-3 flex justify-between items-center transition-colors duration-500">
+        <a routerLink="/feed" class="hover:scale-105 transition-transform">
+          <img src="images/logo.png" alt="Sama Link Logo" class="h-8 object-contain">
+        </a>
         
         <div class="flex items-center gap-2">
              <h1 class="text-sm font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Suggestions</h1>
