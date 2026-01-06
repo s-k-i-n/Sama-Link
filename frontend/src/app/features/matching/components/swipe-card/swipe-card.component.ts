@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { User } from '../../../../core/models/user.model';
 
@@ -56,52 +56,60 @@ import { User } from '../../../../core/models/user.model';
            </div>
         </div>
 
+        <!-- View Details Overlay (Clickable Area) -->
+        <div (click)="toggleDetails()" class="absolute inset-x-0 bottom-0 h-1/2 z-30 cursor-pointer"></div>
+
         <!-- Info Area -->
-        <div class="p-6 flex-grow flex flex-col justify-between dark:bg-slate-900 transition-colors">
+        <div class="p-6 flex-grow flex flex-col justify-between dark:bg-slate-900 transition-colors relative">
           <div class="space-y-4">
-            <!-- Bio -->
+            <!-- Bio (Always show a bit) -->
             <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed line-clamp-2 font-medium">
               {{ user.bio || "Pas de bio pour le moment, mais je suis sûrement quelqu'un de super sympa ! ✨" }}
             </p>
 
+            <!-- Expanded Details Content -->
+            <div *ngIf="isExpanded()" class="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4 pt-2">
+               <div class="flex flex-col gap-2 text-xs text-slate-400 font-bold">
+                  <div *ngIf="user.jobTitle" class="flex items-center gap-2">💼 {{ user.jobTitle }} <span *ngIf="user.company">chez {{ user.company }}</span></div>
+                  <div *ngIf="user.school" class="flex items-center gap-2">🎓 {{ user.school }}</div>
+                  <div *ngIf="user.religion" class="flex items-center gap-2">🕌 {{ user.religion }}</div>
+               </div>
+               
+               <div class="h-px bg-slate-50 dark:bg-slate-800"></div>
+            </div>
+
             <!-- Interests -->
             <div class="flex flex-wrap gap-2">
                <span *ngFor="let interest of (user.interests || ['Voyage', 'Musique', 'Art'])" 
-                     class="px-3 py-1 rounded-full bg-sage/5 dark:bg-slate-800 text-sage dark:text-sage text-[10px] font-black uppercase tracking-widest border border-sage/10">
+                     class="interest-pill scale-90 -ml-1">
                  {{ interest }}
                </span>
             </div>
+          </div>
+          
+          <!-- Expand Hint -->
+          <div class="text-center pt-2">
+             <button (click)="toggleDetails()" class="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-sage transition-colors">
+               {{ isExpanded() ? 'Réduire' : 'Voir plus de détails' }}
+             </button>
           </div>
         </div>
       </div>
       
       <!-- Action Indicators (Visible during swipe) -->
-      <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 group-active:opacity-100 transition-opacity">
-          <!-- Like Hint -->
+      <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 group-active:opacity-100 transition-opacity z-50">
           <div class="like-label border-mint text-mint -rotate-12 absolute left-10 top-20 text-3xl font-black uppercase px-4 py-2 border-4 rounded-2xl hidden group-hover:block">LIKE</div>
-          <!-- Nope Hint -->
           <div class="nope-label border-red-500 text-red-500 rotate-12 absolute right-10 top-20 text-3xl font-black uppercase px-4 py-2 border-4 rounded-2xl hidden group-hover:block">NOPE</div>
       </div>
-    </div>
-
-    <!-- Controls (External to card usually but here for simple UI) -->
-    <div class="flex justify-center gap-6 mt-8">
-      <button 
-        (click)="pass.emit(user)"
-        class="w-16 h-16 rounded-full bg-white shadow-lg border border-slate-100 text-slate-400 flex items-center justify-center text-2xl hover:bg-slate-50 hover:text-red-500 transition-all hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-200">
-        ✖
-      </button>
-
-      <button 
-        (click)="like.emit(user)"
-        class="w-16 h-16 rounded-full bg-sage shadow-lg shadow-sage/30 text-white flex items-center justify-center text-3xl hover:bg-emerald-600 transition-all hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sage/50">
-        ❤️
-      </button>
     </div>
   `
 })
 export class SwipeCardComponent {
   @Input({ required: true }) user!: User;
-  @Output() like = new EventEmitter<User>();
-  @Output() pass = new EventEmitter<User>();
+  
+  isExpanded = signal(false);
+
+  toggleDetails() {
+      this.isExpanded.update((v: boolean) => !v);
+  }
 }

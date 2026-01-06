@@ -32,6 +32,10 @@ export interface User {
   
   isPremium?: boolean;
   isVerified?: boolean;
+  lastSuperLikeAt?: string;
+  dailySuperLikeCount?: number;
+  isOnline?: boolean;
+  lastSeen?: string;
   compatibilityScore?: number; // Match percentage
   distance?: number; // km
 }

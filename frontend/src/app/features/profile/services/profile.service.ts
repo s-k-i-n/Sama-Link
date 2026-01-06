@@ -74,6 +74,26 @@ export class ProfileService {
       return this.http.post<{ message: string, status: string }>(`${environment.apiUrl}/admin/verification/request`, formData);
   }
 
+  deleteAccount() {
+    return this.http.delete(`${environment.apiUrl}/profile`).pipe(
+      tap(() => this.authService.logout())
+    );
+  }
+
+  exportData() {
+    return this.http.get(`${environment.apiUrl}/profile/export`).subscribe({
+      next: (data) => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `sama_link_data_${this.currentUser().username}.json`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      }
+    });
+  }
+
   // Mock Settings
   settings = signal({
     notifications: true,

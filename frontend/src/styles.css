@@ -7,5 +7,27 @@ body {
   height: 100%;
 }
 body {
-  @apply bg-ivory text-night font-sans;
+  @apply bg-ivory text-night font-sans transition-colors duration-500 selection:bg-sage/20;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 dark:bg-slate-900;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-sage transition-colors;
 }

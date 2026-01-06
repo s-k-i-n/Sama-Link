@@ -11,6 +11,8 @@ export interface UserPreferences {
   maxAge: number;
   maxDistance: number;
   genderPreference: 'male' | 'female' | 'all' | null;
+  passportLatitude?: number | null;
+  passportLongitude?: number | null;
 }
 
 @Injectable({
@@ -81,5 +83,14 @@ export class MatchingService {
 
   rewind() {
       return this.http.post<any>(`${this.apiUrl}/rewind`, {});
+  }
+
+  getWhoLikedMe() {
+    return this.http.get<any[]>(`${this.apiUrl}/who-liked-me`).pipe(
+      catchError(err => {
+        console.error('Error fetching likes', err);
+        throw err;
+      })
+    );
   }
 }

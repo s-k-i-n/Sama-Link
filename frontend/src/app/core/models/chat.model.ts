@@ -18,4 +18,7 @@ export interface ChatSession {
   unreadCount: number;
   messages: Message[];
   isTyping?: boolean; // UI state
+  isOnline?: boolean;
+  lastSeen?: Date;
+  isVerified?: boolean;
 }

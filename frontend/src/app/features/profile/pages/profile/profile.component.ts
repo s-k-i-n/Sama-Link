@@ -10,7 +10,7 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SlButtonComponent, SlInputComponent, SlCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, SlInputComponent],
   template: `
     <div class="min-h-screen bg-ivory dark:bg-night pb-24 transition-colors duration-500">
       <!-- Header / Cover -->
@@ -22,6 +22,10 @@ import { SlCardComponent } from '../../../../shared/ui/sl-card/sl-card';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
          </button>
+
+         <div class="absolute top-6 left-1/2 -translate-x-1/2 z-10 opacity-50 contrast-125">
+            <img src="images/logo.png" alt="Sama Link" class="w-8 h-8 object-contain">
+         </div>
 
          <button (click)="goToSettings()" class="absolute top-6 right-6 w-10 h-10 bg-white/10 backdrop-blur-md text-white border border-white/10 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all z-10" title="Paramètres">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

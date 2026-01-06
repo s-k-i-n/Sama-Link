@@ -21,8 +21,13 @@ import { AuthService } from '../../../../core/services/auth.service';
 
       <div class="w-full max-w-md">
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-night mb-2">Bon retour !</h1>
-          <p class="text-slate-600">Connectez-vous pour retrouver vos confessions.</p>
+          <div class="flex justify-center mb-6">
+            <div class="p-4 bg-white/50 backdrop-blur-md rounded-[2.5rem] shadow-2xl shadow-sage/10 border border-white/40">
+              <img src="images/logo.png" alt="Sama Link Logo" class="w-20 h-20 object-contain animate-float">
+            </div>
+          </div>
+          <h1 class="text-3xl font-extrabold text-night mb-2 tracking-tight">Bienvenue sur <span class="text-sage">Sama Link</span></h1>
+          <p class="text-slate-600 font-medium">Connectez-vous pour retrouver vos connexions.</p>
         </div>
 
         <sl-card>

@@ -30,9 +30,16 @@ import { AudioPlayerComponent } from '../../../../shared/components/audio-player
         </div>
         
         <div class="flex-grow">
-           <h2 class="font-bold text-slate-900">{{ activeChat()?.userAlias }}</h2>
-           <span *ngIf="isActive()" class="text-xs text-green-600 flex items-center gap-1">En ligne</span>
-           <span *ngIf="activeChat()?.isTyping" class="text-xs text-slate-400 italic">écrit...</span>
+           <div class="flex items-center gap-1">
+             <h2 class="font-bold text-slate-900">{{ activeChat()?.userAlias }}</h2>
+             <span *ngIf="activeChat()?.isVerified" class="text-blue-500" title="Vérifié">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.64.304 1.24.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+             </span>
+           </div>
+           <span *ngIf="isActive()" class="text-[10px] text-green-600 font-bold uppercase tracking-widest">En ligne</span>
+           <span *ngIf="activeChat()?.isTyping" class="text-xs text-slate-400 italic ml-2">écrit...</span>
         </div>
 
         <button (click)="toggleMenu()" class="p-2 text-slate-400 hover:bg-slate-100 rounded-full">⋮</button>
@@ -85,12 +92,12 @@ import { AudioPlayerComponent } from '../../../../shared/components/audio-player
                     <app-audio-player [src]="msg.content"></app-audio-player>
                 </div>
                 
-                <div class="text-[10px] opacity-70 px-4 pb-1 text-right" [ngClass]="{'text-white/80': msg.senderId === authService.currentUser()?.id, 'text-slate-400': msg.senderId !== authService.currentUser()?.id && msg.type !== 'IMAGE'}">
-                   {{ msg.timestamp | date:'shortTime' }}
-                   <span *ngIf="msg.senderId === authService.currentUser()?.id">
-                     {{ msg.isRead ? '✓✓' : '✓' }}
-                   </span>
-                </div>
+                 <div class="text-[10px] opacity-70 px-4 pb-1 text-right" [ngClass]="{'text-white/80': msg.senderId === authService.currentUser()?.id, 'text-slate-400': msg.senderId !== authService.currentUser()?.id && msg.type !== 'IMAGE'}">
+                    {{ msg.timestamp | date:'shortTime' }}
+                    <span *ngIf="msg.senderId === authService.currentUser()?.id" [class.text-sky-300]="msg.isRead">
+                      {{ msg.isRead ? '✓✓' : '✓' }}
+                    </span>
+                 </div>
               </div>
            </div>
          </ng-container>
@@ -181,6 +188,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
        if (id) {
          this.chatService.setActiveChat(id);
          this.checkIcebreakers(id);
+         this.chatService.markAsRead(id);
        }
     });
   }
@@ -224,8 +232,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   // Helper
   isActive() {
-      // Mock for now or hook to socket event
-      return false; // this.activeChat()?.isOnline
+      return this.activeChat()?.isOnline || false;
   }
 
   goBack() { this.router.navigate(['/messages']); }

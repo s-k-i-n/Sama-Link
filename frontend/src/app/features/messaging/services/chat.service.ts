@@ -51,6 +51,14 @@ export class ChatService implements OnDestroy {
     this.socket.on('user_typing', (data: any) => {
         this.updateTypingStatus(data.conversationId, data.isTyping);
     });
+
+    this.socket.on('user_status_change', (data: { userId: string, isOnline: boolean, lastSeen?: string }) => {
+        this.updateUserPresence(data.userId, data.isOnline, data.lastSeen ? new Date(data.lastSeen) : undefined);
+    });
+
+    this.socket.on('messages_read', (data: { conversationId: string, readByUserId: string, readAt: Date }) => {
+        this.handleMessagesRead(data.conversationId, data.readByUserId);
+    });
   }
 
   loadConversations() {
@@ -64,8 +72,11 @@ export class ChatService implements OnDestroy {
           userPhotoUrl: conv.partner.avatarUrl,
           lastMessage: conv.lastMessage,
           lastMessageTime: new Date(conv.lastMessageAt),
-          unreadCount: conv.unread ? 1 : 0, // Simplification
-          messages: []
+          unreadCount: conv.unread ? 1 : 0, 
+          messages: [],
+          isOnline: conv.partner.isOnline,
+          lastSeen: conv.partner.lastSeen ? new Date(conv.partner.lastSeen) : undefined,
+          isVerified: conv.partner.isVerified
         }));
         this.conversationsSig.set(chatSessions);
         this.isLoadingConversationsSig.set(false);
@@ -149,6 +160,16 @@ export class ChatService implements OnDestroy {
     });
   }
 
+  markAsRead(conversationId: string) {
+    const user = this.authService.currentUser();
+    if (!user) return;
+    
+    this.socket.emit('read_message', {
+      conversationId,
+      userId: user.id
+    });
+  }
+
   private handleNewMessage(msg: any) {
     this.conversationsSig.update(list => 
       list.map(c => {
@@ -178,6 +199,26 @@ export class ChatService implements OnDestroy {
   private updateTypingStatus(conversationId: string, isTyping: boolean) {
     this.conversationsSig.update(list => 
       list.map(c => c.id === conversationId ? { ...c, isTyping } : c)
+    );
+  }
+
+  private updateUserPresence(userId: string, isOnline: boolean, lastSeen?: Date) {
+    this.conversationsSig.update(list => 
+      list.map(c => c.userId === userId ? { ...c, isOnline, lastSeen } : c)
+    );
+  }
+
+  private handleMessagesRead(conversationId: string, readByUserId: string) {
+    this.conversationsSig.update(list => 
+      list.map(c => {
+        if (c.id === conversationId) {
+          const messages = c.messages.map(m => 
+            m.senderId !== readByUserId ? { ...m, isRead: true } : m
+          );
+          return { ...c, messages };
+        }
+        return c;
+      })
     );
   }
 

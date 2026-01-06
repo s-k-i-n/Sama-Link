@@ -80,6 +80,12 @@ export class AuthService {
       this.hasCompletedOnboarding.set(true);
   }
 
+  updateCurrentUser(user: any) {
+    const updatedUser = { ...this.currentUser(), ...user };
+    this.storage.setItem('user', JSON.stringify(updatedUser));
+    this.currentUser.set(updatedUser);
+  }
+
   logout() {
     this.storage.removeItem('access_token');
     this.storage.removeItem('user');

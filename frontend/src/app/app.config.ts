@@ -17,9 +17,9 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor])
     ),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: environment.production, // Use environment.production
+      enabled: true, // Enabled for testing Push
       registrationStrategy: 'registerWhenStable:30000'
     }),
-    { provide: ErrorHandler, useClass: GlobalErrorHandler }, provideClientHydration(withEventReplay())
+    { provide: ErrorHandler, useClass: GlobalErrorHandler }
   ]
 };

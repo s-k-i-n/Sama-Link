@@ -85,9 +85,6 @@ import { FiltersModalComponent } from '../../components/filters-modal/filters-mo
           <app-swipe-card 
             *ngFor="let user of [matchingService.suggestions()[0]]"
             [user]="user"
-            (onPass)="onPass(user)"
-            (onLike)="onLike(user)"
-            (onSuperLike)="onSuperLike(user)"
             class="animate-reveal z-10">
           </app-swipe-card>
         </div>

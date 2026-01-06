@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatchingService, UserPreferences } from '../../services/matching.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 
 @Component({
@@ -9,7 +10,7 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, SlButtonComponent],
   template: `
-    <div class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 animate-fade-in" (click)="close()">
+    <div *ngIf="isOpen()" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 animate-fade-in" (click)="close()">
       <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 animate-slide-up" (click)="$event.stopPropagation()">
         
         <div class="flex justify-between items-center mb-6">
@@ -77,6 +78,39 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
             </div>
           </div>
 
+          <!-- Passport (Premium only) -->
+          <div *ngIf="user()?.isPremium" class="mb-8 p-4 bg-gold/5 rounded-2xl border border-gold/20">
+             <div class="flex items-center gap-2 mb-3">
+                <span class="text-lg">🌍</span>
+                <h3 class="text-sm font-black text-gold-dark uppercase tracking-tight">Mode Passeport</h3>
+             </div>
+             <p class="text-[10px] text-slate-500 mb-4">Voyagez virtuellement et matchez avec des personnes partout dans le monde.</p>
+             
+             <div class="space-y-3">
+                <select (change)="selectCity($event)" class="select select-sm select-bordered w-full rounded-xl text-xs bg-white">
+                   <option value="">Ma position actuelle</option>
+                   <option value="dakar" [selected]="isCity('dakar')">Dakar, Sénégal (Local)</option>
+                   <option value="paris" [selected]="isCity('paris')">Paris, France</option>
+                   <option value="newyork" [selected]="isCity('newyork')">New York, USA</option>
+                   <option value="dubai" [selected]="isCity('dubai')">Dubaï, UAE</option>
+                </select>
+                <p *ngIf="filterForm.get('passportLatitude')?.value" class="text-[10px] text-sage font-bold italic text-center">
+                   📍 Position fixée sur {{ getCityName() }}
+                </p>
+             </div>
+          </div>
+
+          <!-- Premium Upsell (if free) -->
+          <div *ngIf="!user()?.isPremium" (click)="goToPremium()" class="mb-8 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 cursor-pointer hover:bg-slate-100 transition-colors">
+             <div class="flex items-center justify-between">
+                <div class="flex flex-col text-left">
+                   <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Passeport</span>
+                   <span class="text-xs font-bold text-slate-600">Voyagez où vous voulez</span>
+                </div>
+                <span class="text-gold text-lg">👑</span>
+             </div>
+          </div>
+
           <sl-button variant="primary" [block]="true" size="lg" [disabled]="isLoading()">
             {{ isLoading() ? 'Application...' : 'Appliquer les filtres' }}
           </sl-button>
@@ -95,6 +129,9 @@ import { SlButtonComponent } from '../../../../shared/ui/sl-button/sl-button';
 export class FiltersModalComponent {
   private fb = inject(FormBuilder);
   private matchingService = inject(MatchingService);
+  private authService = inject(AuthService);
+  
+  user = this.authService.currentUser;
   
   isOpen = signal(false);
   isLoading = signal(false);
@@ -103,7 +140,9 @@ export class FiltersModalComponent {
     maxDistance: [50],
     minAge: [18],
     maxAge: [35],
-    genderPreference: ['all']
+    genderPreference: ['all'],
+    passportLatitude: [null as number | null],
+    passportLongitude: [null as number | null]
   });
 
   constructor() {
@@ -117,7 +156,9 @@ export class FiltersModalComponent {
           maxDistance: prefs.maxDistance,
           minAge: prefs.minAge,
           maxAge: prefs.maxAge,
-          genderPreference: prefs.genderPreference || 'all'
+          genderPreference: prefs.genderPreference || 'all',
+          passportLatitude: prefs.passportLatitude,
+          passportLongitude: prefs.passportLongitude
         });
       }
     });
@@ -137,6 +178,44 @@ export class FiltersModalComponent {
   open() {
     this.isOpen.set(true);
     this.initialLoad(); // Refresh incase it changed
+  }
+
+  selectCity(event: any) {
+    const city = event.target.value;
+    const coords: Record<string, {lat: number, lng: number} | null> = {
+      'dakar': { lat: 14.7167, lng: -17.4677 },
+      'paris': { lat: 48.8566, lng: 2.3522 },
+      'newyork': { lat: 40.7128, lng: -74.0060 },
+      'dubai': { lat: 25.2048, lng: 55.2708 },
+      '': null
+    };
+
+    const selected = coords[city];
+    this.filterForm.patchValue({
+      passportLatitude: selected?.lat || null,
+      passportLongitude: selected?.lng || null
+    });
+  }
+
+  isCity(city: string): boolean {
+    const lat = this.filterForm.get('passportLatitude')?.value;
+    const coords: Record<string, number> = { 'dakar': 14.7167, 'paris': 48.8566, 'newyork': 40.7128, 'dubai': 25.2048 };
+    return coords[city] === lat;
+  }
+
+  getCityName(): string {
+     const lat = this.filterForm.get('passportLatitude')?.value;
+     if (lat === 14.7167) return 'Dakar';
+     if (lat === 48.8566) return 'Paris';
+     if (lat === 40.7128) return 'New York';
+     if (lat === 25.2048) return 'Dubaï';
+     return 'une autre position';
+  }
+
+  goToPremium() {
+    this.close();
+    // Use window.location or router
+    window.location.href = '/premium';
   }
   
   close() {
